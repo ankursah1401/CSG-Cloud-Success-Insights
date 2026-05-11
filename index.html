@@ -1,0 +1,1290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>CSG Executive Report — Case Inflow &amp; Sev-1 Deep Dive | TTM May 2025 – Apr 2026</title>
+<script src='https://cdn.plot.ly/plotly-2.35.2.min.js'></script>
+<style>
+/* ═══════════════════════════════════════════════
+   RESET & BASE
+═══════════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --sf-navy:    #032D60;
+  --sf-blue:    #0176D3;
+  --sf-lt-blue: #1B96FF;
+  --sf-teal:    #06A59A;
+  --sf-green:   #2E844A;
+  --sf-red:     #BA0517;
+  --sf-orange:  #DD5A00;
+  --sf-gray1:   #F3F3F3;
+  --sf-gray2:   #E5E5E5;
+  --sf-gray3:   #AEAEAE;
+  --sf-dark:    #1D1D1D;
+  --good-bg:    #EDF7EE;
+  --good-fg:    #2E844A;
+  --bad-bg:     #FEF1EE;
+  --bad-fg:     #BA0517;
+  --neutral-fg: #6E6E6E;
+  --prev-pct-bg:#EEF5FF;
+  --curr-pct-bg:#E8F9F7;
+}
+body {
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background: #F8FAFB;
+  color: var(--sf-dark);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* ═══════════════════════════════════════════════
+   UNIFIED BANNER
+═══════════════════════════════════════════════ */
+.exec-banner {
+  background: linear-gradient(135deg, #011F45 0%, #032D60 35%, #0B4A8A 70%, #0176D3 100%);
+  color: white;
+  padding: 32px 40px 26px;
+  position: relative;
+  overflow: hidden;
+}
+.exec-banner::after {
+  content: '';
+  position: absolute; bottom: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--sf-teal), var(--sf-lt-blue), var(--sf-orange));
+}
+.exec-banner h1 { font-size: 24px; font-weight: 700; letter-spacing: .3px; }
+.exec-banner .sub { font-size: 13.5px; opacity: .85; margin-top: 5px; }
+.exec-banner .badge-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
+.exec-banner .badge {
+  display: inline-block;
+  background: rgba(255,255,255,.15);
+  border: 1px solid rgba(255,255,255,.25);
+  border-radius: 20px;
+  padding: 4px 14px;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: .3px;
+}
+.exec-banner .meta { font-size: 11px; opacity: .55; margin-top: 8px; }
+
+/* ═══════════════════════════════════════════════
+   STICKY NAVIGATION
+═══════════════════════════════════════════════ */
+.sticky-nav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--sf-navy);
+  display: flex;
+  gap: 0;
+  box-shadow: 0 2px 8px rgba(0,0,0,.25);
+  overflow-x: auto;
+}
+.sticky-nav a {
+  color: rgba(255,255,255,.75);
+  text-decoration: none;
+  padding: 12px 22px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .3px;
+  white-space: nowrap;
+  border-bottom: 3px solid transparent;
+  transition: color .2s, border-color .2s;
+}
+.sticky-nav a:hover {
+  color: white;
+  border-bottom-color: var(--sf-lt-blue);
+  background: rgba(255,255,255,.07);
+}
+.sticky-nav .nav-divider {
+  width: 1px; background: rgba(255,255,255,.15);
+  margin: 8px 0;
+}
+
+/* ═══════════════════════════════════════════════
+   REPORT SECTION WRAPPERS
+═══════════════════════════════════════════════ */
+.report-section {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 32px 32px 8px;
+}
+.report-section + .report-section {
+  padding-top: 8px;
+}
+.section-divider {
+  border: none;
+  height: 4px;
+  background: linear-gradient(90deg, var(--sf-lt-blue) 0%, var(--sf-teal) 50%, transparent 100%);
+  margin: 0;
+}
+.section-label {
+  background: var(--sf-navy);
+  color: white;
+  padding: 10px 40px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.section-label span {
+  display: inline-block;
+  background: rgba(255,255,255,.15);
+  border-radius: 12px;
+  padding: 2px 10px;
+  margin-right: 8px;
+  font-size: 11px;
+}
+
+/* ═══════════════════════════════════════════════
+   SHARED TTM STYLES
+═══════════════════════════════════════════════ */
+.section-title {
+  font-size: 15px; font-weight: 700; color: var(--sf-navy);
+  border-left: 4px solid var(--sf-lt-blue);
+  padding-left: 12px; margin: 28px 0 16px; letter-spacing: .2px;
+}
+.kpi-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 20px;
+}
+.kpi-card {
+  background: white; border: 1px solid var(--sf-gray2); border-radius: 10px;
+  padding: 18px 20px; box-shadow: 0 1px 4px rgba(0,0,0,.06);
+  position: relative; overflow: hidden;
+}
+.kpi-card::before {
+  content:''; position:absolute; top:0; left:0; width:4px; height:100%;
+  background: var(--sf-lt-blue);
+}
+.kpi-card.red::before    { background: var(--sf-red); }
+.kpi-card.teal::before   { background: var(--sf-teal); }
+.kpi-card.orange::before { background: var(--sf-orange); }
+.kpi-label { font-size:11px; font-weight:600; text-transform:uppercase;
+              letter-spacing:.6px; color:var(--sf-gray3); margin-bottom:6px; }
+.kpi-value { font-size:26px; font-weight:700; color:var(--sf-navy); line-height:1.1; }
+.kpi-value.red { color:var(--sf-red); }
+.kpi-sub   { font-size:11.5px; color:#6E6E6E; margin-top:5px; }
+.kpi-delta { font-size:12px; font-weight:600; margin-top:4px; }
+.kpi-delta.good { color:var(--good-fg); }
+.kpi-delta.bad  { color:var(--bad-fg); }
+.insight-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:8px; }
+.insight-card {
+  background:white; border:1px solid var(--sf-gray2); border-radius:10px;
+  padding:18px 20px; box-shadow:0 1px 4px rgba(0,0,0,.06);
+}
+.insight-card h3 {
+  font-size:12px; font-weight:700; text-transform:uppercase;
+  letter-spacing:.5px; color:var(--sf-blue); margin-bottom:10px;
+}
+.insight-card ul { list-style:none; padding:0; }
+.insight-card ul li {
+  padding:6px 0; border-bottom:1px solid var(--sf-gray1);
+  font-size:12.5px; display:flex; justify-content:space-between; align-items:center; gap:8px;
+}
+.insight-card ul li:last-child { border-bottom:none; }
+.tag {
+  display:inline-block; border-radius:12px; font-size:11px;
+  font-weight:600; padding:2px 9px; white-space:nowrap;
+}
+.tag.red    { background:var(--bad-bg);  color:var(--bad-fg); }
+.tag.green  { background:var(--good-bg); color:var(--good-fg); }
+.tag.blue   { background:#EBF5FB; color:var(--sf-blue); }
+.tag.orange { background:#FFF4EE; color:var(--sf-orange); }
+.table-wrapper {
+  background:white; border:1px solid var(--sf-gray2); border-radius:10px;
+  overflow:hidden; box-shadow:0 1px 6px rgba(0,0,0,.07); margin-bottom:36px;
+}
+.table-header {
+  background:var(--sf-navy); color:white;
+  padding:14px 20px; display:flex; justify-content:space-between; align-items:center;
+}
+.table-header h2 { font-size:14px; font-weight:700; }
+.table-header .period-badge {
+  background:rgba(255,255,255,.15); border-radius:20px;
+  font-size:11.5px; padding:3px 14px; font-weight:500;
+}
+.table-scroll { overflow-x:auto; }
+table { width:100%; border-collapse:collapse; white-space:nowrap; }
+thead tr { background:#F0F4F8; border-bottom:2px solid var(--sf-gray2); }
+thead th {
+  padding:10px 14px; font-size:11.5px; font-weight:700;
+  text-transform:uppercase; letter-spacing:.4px; color:#444; vertical-align:bottom;
+}
+thead th .sub {
+  font-size:10px; font-weight:500; color:var(--sf-gray3);
+  text-transform:none; letter-spacing:0; display:block;
+}
+th.align-right, td.align-right { text-align:right; }
+th.align-left,  td.align-left  { text-align:left; }
+tbody tr.odd  { background:white; }
+tbody tr.even { background:var(--sf-gray1); }
+tbody tr:hover { background:#EBF5FB; transition:background .15s; }
+tbody tr.total-row {
+  background:#0B3D6E !important; color:white;
+  font-weight:700; border-top:2px solid var(--sf-blue);
+}
+tbody tr.total-row td { color:white !important; }
+td { padding:9px 14px; font-size:12.5px; border-bottom:1px solid var(--sf-gray2); }
+td.ou-name { font-weight:600; color:var(--sf-navy); min-width:145px; }
+tr.total-row td.ou-name { color:white; }
+td.num { font-variant-numeric:tabular-nums; }
+td.pct { font-variant-numeric:tabular-nums; }
+td.curr-pct { background:var(--curr-pct-bg); color:#0A7B6C; font-weight:700; font-size:13px; }
+td.prev-pct { background:var(--prev-pct-bg); color:#3A6EA8; font-weight:600; }
+tr.total-row td.curr-pct,
+tr.total-row td.prev-pct { background:transparent; color:white; }
+td.var         { font-weight:600; font-size:12px; }
+td.var.good    { color:var(--good-fg); background:var(--good-bg); }
+td.var.bad     { color:var(--bad-fg);  background:var(--bad-bg); }
+td.var.neutral { color:var(--neutral-fg); }
+tr.total-row td.var                { background:transparent; }
+tr.total-row td.var.good           { color:#7BEA9B; }
+tr.total-row td.var.bad            { color:#FFA8A0; }
+tr.total-row td.var.neutral        { color:#ccc; }
+.divider { height:1px; background:var(--sf-gray2); margin:28px 0; }
+.notes {
+  background:white; border:1px solid var(--sf-gray2); border-radius:10px;
+  padding:16px 20px; font-size:11.5px; color:#6E6E6E; line-height:1.8;
+  margin-bottom: 32px;
+}
+.notes strong { color:var(--sf-dark); }
+.notes ul { padding-left:18px; }
+.notes ul li { margin-bottom:3px; }
+
+/* ═══════════════════════════════════════════════
+   SEV1 REPORT STYLES (merged, namespaced via container)
+═══════════════════════════════════════════════ */
+.sev1-section { background: #F5F8FB; }
+.sev1-section .container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 28px 28px 60px;
+}
+.sev1-section h2 {
+  color: #032D60;
+  border-bottom: 2px solid #0176D3;
+  padding-bottom: 8px;
+  margin-top: 40px;
+  font-size: 16px;
+}
+.sev1-section h3 { color: #032D60; margin-top: 28px; font-size: 14px; }
+.sev1-section .kpi-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px; margin: 0 0 28px;
+}
+.sev1-section .kpi {
+  background: white; padding: 20px; border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,.06); border-left: 4px solid #0176D3;
+}
+.sev1-section .kpi .label {
+  font-size: 12px; text-transform: uppercase;
+  letter-spacing: .5px; color: #6B7785; margin-bottom: 6px;
+}
+.sev1-section .kpi .value { font-size: 28px; font-weight: 700; color: #032D60; }
+.sev1-section .kpi .delta { font-size: 12px; color: #6B7785; margin-top: 4px; }
+.sev1-section .card {
+  background: white; padding: 20px; border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,.06); margin-bottom: 24px;
+}
+.sev1-section ul.insights {
+  background: #FFF8EC; border-left: 4px solid #FE9339;
+  padding: 16px 20px 16px 36px; border-radius: 8px; line-height: 1.7;
+}
+.sev1-section ul.insights li { margin-bottom: 8px; }
+.sev1-section table { border-collapse:collapse; width:100%; font-size:13px; }
+.sev1-section th,
+.sev1-section td { padding:8px 12px; text-align:left; border-bottom:1px solid #E5E9F0; }
+.sev1-section th { background:#F0F4F9; color:#032D60; font-weight:600; }
+.sev1-section td.num,
+.sev1-section th.num { text-align:right; font-variant-numeric:tabular-nums; }
+.sev1-section td.acct-name {
+  max-width: 160px; overflow: hidden;
+  text-overflow: ellipsis; white-space: nowrap;
+  cursor: default;
+}
+.sev1-section .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+.sev1-section .grid-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:20px; }
+.sev1-section .grid-ou { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-top:16px; }
+.sev1-section .ou-card { padding:14px; }
+.sev1-section .ou-title {
+  font-size:13px; font-weight:700; color:#032D60; margin-bottom:8px;
+  border-bottom:2px solid #0176D3; padding-bottom:4px;
+}
+.sev1-section .ou-card table { font-size:11.5px; }
+.sev1-section .ou-card th,
+.sev1-section .ou-card td { padding:4px 6px; }
+.sev1-section h2.ou-section { margin-top:50px; }
+
+/* ═══════════════════════════════════════════════
+   UNIFIED FOOTER
+═══════════════════════════════════════════════ */
+.exec-footer {
+  background: var(--sf-navy);
+  color: rgba(255,255,255,.55);
+  text-align: center;
+  padding: 18px 24px;
+  font-size: 11.5px;
+  border-top: 3px solid var(--sf-lt-blue);
+}
+.exec-footer strong { color: rgba(255,255,255,.8); }
+
+/* ── Sev-1 summary bullets in top section ── */
+.sev1-summary-bullets ul.insights {
+  background: #FFF8EC; border-left: 4px solid #FE9339;
+  padding: 16px 20px 16px 36px; border-radius: 8px; line-height: 1.7;
+  margin-bottom: 0;
+}
+.sev1-summary-bullets ul.insights li { margin-bottom: 8px; font-size: 13px; color: #1B2733; }
+.sev1-summary-bullets ul.insights li:last-child { margin-bottom: 0; }
+
+/* ── Commentary bullet list ── */
+.commentary-bullets {
+  list-style: none; padding: 18px 22px; margin: 0;
+  background: #F8FAFB; border: 1px solid var(--sf-gray2);
+  border-left: 4px solid var(--sf-lt-blue);
+  border-radius: 8px;
+  display: flex; flex-direction: column; gap: 10px;
+}
+.commentary-bullets li {
+  display: flex; gap: 10px; align-items: flex-start;
+  font-size: 14px; color: #333; line-height: 1.8;
+  border: none; background: none; padding: 0; border-radius: 0;
+}
+.commentary-bullets li::before {
+  content: "•"; color: var(--sf-blue); font-size: 20px;
+  flex-shrink: 0; line-height: 1.4;
+}
+.bullet-icon { display: none; }
+.commentary-lead { font-size: 14px; font-weight: 600; color: #032D60; margin: 0 0 12px 0; }
+.commentary-para {
+  margin: 0; padding: 18px 22px;
+  background: #F8FAFB; border: 1px solid var(--sf-gray2);
+  border-left: 4px solid var(--sf-lt-blue);
+  border-radius: 8px;
+  font-size: 13px; color: #333; line-height: 1.85;
+}
+.commentary-para p {
+  margin: 0 0 10px 0;
+}
+.commentary-para p:last-child {
+  margin-bottom: 0;
+}
+
+@media (max-width: 900px) {
+  .kpi-grid { grid-template-columns: repeat(2,1fr); }
+  .insight-grid { grid-template-columns: 1fr; }
+  .sev1-section .grid-2,
+  .sev1-section .grid-3,
+  .sev1-section .grid-ou { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════
+     UNIFIED EXECUTIVE BANNER
+══════════════════════════════════════════════════ -->
+<div class="exec-banner">
+  <h1>📊 CSG Executive Report — Case Inflow &amp; Sev-1 Deep Dive</h1>
+  <div class="sub">Customer Success Group · Support Operations Intelligence</div>
+  <div class="badge-row">
+    <span class="badge">📅 TTM: May 2025 – Apr 2026</span>
+    <span class="badge">📊 Section 1: Case Inflow Overview</span>
+    <span class="badge">🔴 Section 2: Sev-1 Account Analysis</span>
+  </div>
+  <div class="meta">Source: FACT_CASE_SOT &nbsp;·&nbsp; Database: SSE_DM_CSG_RPT_PRD.BI_DE &nbsp;·&nbsp; Excludes: Slack DERIVED_CLOUD &nbsp;·&nbsp; "Others" OU in Grand Total only &nbsp;·&nbsp; Generated: May 11, 2026</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     STICKY NAV
+══════════════════════════════════════════════════ -->
+<nav class="sticky-nav">
+  <a href="#sec-inflow">📊 Case Inflow Overview</a>
+  <div class="nav-divider"></div>
+  <a href="#sec-exec-summary">KPIs &amp; Insights</a>
+  <a href="#sec-inflow-table">Inflow Table</a>
+  <div class="nav-divider"></div>
+  <a href="#sec-sev1">🔴 Sev-1 Deep Dive</a>
+  <div class="nav-divider"></div>
+  <a href="#sec-sev1-overall">Overall Analysis</a>
+  <a href="#sec-sev1-signature">Signature Accounts</a>
+  <a href="#sec-sev1-ou-all">Top Accounts by OU</a>
+  <a href="#sec-sev1-ou-sig">Top Sig Accounts by OU</a>
+</nav>
+
+<!-- ══════════════════════════════════════════════════
+     SECTION 1: CASE INFLOW OVERVIEW
+══════════════════════════════════════════════════ -->
+<div class="section-label" id="sec-inflow">
+  <span>Section 1</span> Case Inflow Overview — TTM May 2025 – Apr 2026 vs Prior Year
+</div>
+
+<div class="report-section" id="sec-exec-summary">
+
+
+  <!-- Executive Summary -->
+  <div class="section-title">Executive Summary — TTM May 2025 – Apr 2026</div>
+
+  <div class="kpi-grid" style="margin-bottom:20px;">
+    <div class="kpi-card">
+      <div class="kpi-label">Total Case Inflow (TTM)</div>
+      <div class="kpi-value">1,583,695</div>
+      <div class="kpi-sub">Prior year: 1,732,853</div>
+      <div class="kpi-delta good">▼ -8.6% vs prior year</div>
+    </div>
+    <div class="kpi-card red">
+      <div class="kpi-label">Sev 1 Cases (TTM)</div>
+      <div class="kpi-value red">165,880</div>
+      <div class="kpi-sub">Sev1%: <strong>10.5%</strong> &nbsp;|&nbsp; Prev: 5.9%</div>
+      <div class="kpi-delta bad">▲ +4.6pp vs prior year</div>
+    </div>
+    <div class="kpi-card teal">
+      <div class="kpi-label">Cases with Investigation (TTM)</div>
+      <div class="kpi-value">63,731</div>
+      <div class="kpi-sub">Inv Cases %: <strong>4.0%</strong></div>
+      <div class="kpi-delta good">▼ -0.0pp vs prior year</div>
+    </div>
+    <div class="kpi-card orange">
+      <div class="kpi-label">Highest Sev1% OU</div>
+      <div class="kpi-value" style="font-size:19px;">SASIA</div>
+      <div class="kpi-sub">Sev1%: <strong>22.5%</strong></div>
+      <div class="kpi-delta bad">2nd: EMEA SOUTH at 12.6%</div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- Executive Commentary -->
+  <div class="exec-commentary">
+    <div class="commentary-header">
+      <span class="commentary-icon">📋</span>
+      <h3>Executive Commentary</h3>
+    </div>
+    <div class="commentary-body">
+      <p class="commentary-lead">TTM May 2025 – Apr 2026 — Key Observations:</p>
+      <ul class="commentary-bullets">
+        <li>
+          <span class="bullet-icon">🔴</span>
+          <span>Sev 1 case volume increased <strong>+63.4% YoY</strong> (from <strong>101,503 to 165,880</strong>) over the trailing 12 months, even as overall case inflow <strong>declined by 8.6%</strong>. This surge appears to be driven primarily by the <strong>open flexibility for anyone to create Sev 1 cases</strong> without a validation step, rather than a genuine rise in product-related critical issues.</span>
+        </li>
+        <li>
+          <span class="bullet-icon">🔬</span>
+          <span>Investigation rates remained <strong>flat at ~4.0%</strong> — unchanged from the prior year — confirming that the growth in Sev 1 volume is <strong>not correlated with an increase in underlying product issues</strong>; a stable investigation rate alongside a +63% Sev 1 spike is a strong signal that the increase is <strong>behavioural, not technical</strong>.</span>
+        </li>
+        <li>
+          <span class="bullet-icon">📊</span>
+          <span>Across <strong>331,888 accounts</strong>, <strong>34,131 (10.3%)</strong> raised at least one Sev-1 case in the last 12 months, generating <strong>165,845 Sev-1 cases</strong> in total.</span>
+        </li>
+        <li>
+          <span class="bullet-icon">🏆</span>
+          <span><strong>AMER REG</strong> drives the highest absolute Sev-1 volume (<strong>16,467 cases</strong>), while <strong>SASIA</strong> shows the highest case intensity.</span>
+        </li>
+        <li>
+          <span class="bullet-icon">✍️</span>
+          <span>Notably, <strong>59.2% of Signature accounts</strong> (3,626 of 6,129) created Sev-1 cases — representing just <strong>1.8% of the account base</strong> but contributing <strong>15.6% of all Sev-1 cases</strong>.</span>
+        </li>
+        <li>
+          <span class="bullet-icon">📈</span>
+          <span>A heavy-tail pattern is evident: accounts filing <strong>6+ cases</strong> (5,582 accounts, 16.3% of creators) generate <strong>69.2% of all Sev-1 volume</strong> — making them the <strong>primary lever for proactive reduction</strong>.</span>
+        </li>
+        <li>
+          <span class="bullet-icon">🏢</span>
+          <span>Top Sev-1 creators include <strong>Amazon.com, Inc.</strong> (334 cases) and <strong>KOTAK MAHINDRA BANK LIMITED</strong> (238 cases).</span>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- Detail Table -->
+  <div class="section-title" id="sec-inflow-table">Detailed View — TTM May 2025 – Apr 2026</div>
+  <div class="table-wrapper">
+    <div class="table-header">
+      <h2>Case Inflow by CSG Territory — Trailing 12 Months</h2>
+      <span class="period-badge">TTM: May 2025–Apr 2026 &nbsp;vs&nbsp; Prior Year: May 2024–Apr 2025 &nbsp;·&nbsp; Sorted by Volume ↓ &nbsp;·&nbsp; "Others" in Grand Total only</span>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr class="col-group-row">
+            <th rowspan="2" class="align-left th-ou">OU (CSG Territory)</th>
+            <th colspan="3" class="col-group col-group-vol">Total Cases</th>
+            <th colspan="3" class="col-group col-group-sev">Sev 1 Cases</th>
+            <th colspan="3" class="col-group col-group-inv">Investigation Rate</th>
+          </tr>
+          <tr>
+            <th class="align-right sub-hdr grp-vol-curr">TTM<br><span class="sub">May'25–Apr'26</span></th>
+            <th class="align-right sub-hdr grp-vol-prev">Prev Period<br><span class="sub">May'24–Apr'25</span></th>
+            <th class="align-right sub-hdr grp-vol-chg">% Chg</th>
+            <th class="align-right sub-hdr grp-sev-curr">TTM<br><span class="sub">May'25–Apr'26</span></th>
+            <th class="align-right sub-hdr grp-sev-prev">Prev Period<br><span class="sub">May'24–Apr'25</span></th>
+            <th class="align-right sub-hdr grp-sev-chg">% Chg</th>
+            <th class="align-right sub-hdr grp-inv-curr">Inv%<br><span class="sub">May'25–Apr'26</span></th>
+            <th class="align-right sub-hdr grp-inv-prev">Prev Inv%<br><span class="sub">May'24–Apr'25</span></th>
+            <th class="align-right sub-hdr grp-inv-chg">Chg (pp)</th>
+          </tr>
+        </thead>
+        <tbody>
+<tr class="even"><td class="ou-name">SMB</td><td class="align-right num grp-vol-curr">210,662</td><td class="align-right num grp-vol-prev">269,337</td><td class="align-right var good grp-vol-chg">▼ -21.8%</td><td class="align-right num grp-sev-curr">15,507</td><td class="align-right num grp-sev-prev">5,636</td><td class="align-right var bad grp-sev-chg">▲ +175.1%</td><td class="align-right pct grp-inv-curr">2.1%</td><td class="align-right pct grp-inv-prev">2.1%</td><td class="align-right var good grp-inv-chg">▼ -0.0pp</td></tr>
+<tr class="odd"><td class="ou-name">AMER REG</td><td class="align-right num grp-vol-curr">175,338</td><td class="align-right num grp-vol-prev">190,658</td><td class="align-right var good grp-vol-chg">▼ -8.0%</td><td class="align-right num grp-sev-curr">16,478</td><td class="align-right num grp-sev-prev">9,258</td><td class="align-right var bad grp-sev-chg">▲ +78.0%</td><td class="align-right pct grp-inv-curr">5.1%</td><td class="align-right pct grp-inv-prev">5.0%</td><td class="align-right var bad grp-inv-chg">▲ +0.2pp</td></tr>
+<tr class="even"><td class="ou-name">JP</td><td class="align-right num grp-vol-curr">132,103</td><td class="align-right num grp-vol-prev">166,159</td><td class="align-right var good grp-vol-chg">▼ -20.5%</td><td class="align-right num grp-sev-curr">1,878</td><td class="align-right num grp-sev-prev">1,026</td><td class="align-right var bad grp-sev-chg">▲ +83.0%</td><td class="align-right pct grp-inv-curr">2.5%</td><td class="align-right pct grp-inv-prev">2.3%</td><td class="align-right var bad grp-inv-chg">▲ +0.2pp</td></tr>
+<tr class="odd"><td class="ou-name">PS</td><td class="align-right num grp-vol-curr">130,472</td><td class="align-right num grp-vol-prev">143,195</td><td class="align-right var good grp-vol-chg">▼ -8.9%</td><td class="align-right num grp-sev-curr">10,180</td><td class="align-right num grp-sev-prev">4,458</td><td class="align-right var bad grp-sev-chg">▲ +128.4%</td><td class="align-right pct grp-inv-curr">4.2%</td><td class="align-right pct grp-inv-prev">4.6%</td><td class="align-right var good grp-inv-chg">▼ -0.4pp</td></tr>
+<tr class="even"><td class="ou-name">AMER ACC TMT</td><td class="align-right num grp-vol-curr">118,800</td><td class="align-right num grp-vol-prev">124,270</td><td class="align-right var good grp-vol-chg">▼ -4.4%</td><td class="align-right num grp-sev-curr">12,132</td><td class="align-right num grp-sev-prev">5,952</td><td class="align-right var bad grp-sev-chg">▲ +103.8%</td><td class="align-right pct grp-inv-curr">4.8%</td><td class="align-right pct grp-inv-prev">4.9%</td><td class="align-right var good grp-inv-chg">▼ -0.1pp</td></tr>
+<tr class="odd"><td class="ou-name">AMER PACE</td><td class="align-right num grp-vol-curr">107,046</td><td class="align-right num grp-vol-prev">110,167</td><td class="align-right var good grp-vol-chg">▼ -2.8%</td><td class="align-right num grp-sev-curr">10,648</td><td class="align-right num grp-sev-prev">5,856</td><td class="align-right var bad grp-sev-chg">▲ +81.8%</td><td class="align-right pct grp-inv-curr">5.5%</td><td class="align-right pct grp-inv-prev">5.9%</td><td class="align-right var good grp-inv-chg">▼ -0.4pp</td></tr>
+<tr class="even"><td class="ou-name">SASIA</td><td class="align-right num grp-vol-curr">63,639</td><td class="align-right num grp-vol-prev">59,632</td><td class="align-right var bad grp-vol-chg">▲ +6.7%</td><td class="align-right num grp-sev-curr">14,299</td><td class="align-right num grp-sev-prev">5,940</td><td class="align-right var bad grp-sev-chg">▲ +140.7%</td><td class="align-right pct grp-inv-curr">4.6%</td><td class="align-right pct grp-inv-prev">4.3%</td><td class="align-right var bad grp-inv-chg">▲ +0.3pp</td></tr>
+<tr class="odd"><td class="ou-name">UKI</td><td class="align-right num grp-vol-curr">62,406</td><td class="align-right num grp-vol-prev">67,424</td><td class="align-right var good grp-vol-chg">▼ -7.4%</td><td class="align-right num grp-sev-curr">6,342</td><td class="align-right num grp-sev-prev">3,292</td><td class="align-right var bad grp-sev-chg">▲ +92.6%</td><td class="align-right pct grp-inv-curr">4.8%</td><td class="align-right pct grp-inv-prev">5.2%</td><td class="align-right var good grp-inv-chg">▼ -0.4pp</td></tr>
+<tr class="even"><td class="ou-name">AMER ACC CBS</td><td class="align-right num grp-vol-curr">60,253</td><td class="align-right num grp-vol-prev">66,512</td><td class="align-right var good grp-vol-chg">▼ -9.4%</td><td class="align-right num grp-sev-curr">5,787</td><td class="align-right num grp-sev-prev">3,053</td><td class="align-right var bad grp-sev-chg">▲ +89.6%</td><td class="align-right pct grp-inv-curr">4.6%</td><td class="align-right pct grp-inv-prev">4.6%</td><td class="align-right var good grp-inv-chg">▼ -0.0pp</td></tr>
+<tr class="odd"><td class="ou-name">EMEA SOUTH</td><td class="align-right num grp-vol-curr">59,782</td><td class="align-right num grp-vol-prev">59,282</td><td class="align-right var bad grp-vol-chg">▲ +0.8%</td><td class="align-right num grp-sev-curr">7,562</td><td class="align-right num grp-sev-prev">3,535</td><td class="align-right var bad grp-sev-chg">▲ +113.9%</td><td class="align-right pct grp-inv-curr">5.7%</td><td class="align-right pct grp-inv-prev">5.6%</td><td class="align-right var bad grp-inv-chg">▲ +0.1pp</td></tr>
+<tr class="even"><td class="ou-name">EMEA NORTH</td><td class="align-right num grp-vol-curr">51,333</td><td class="align-right num grp-vol-prev">52,776</td><td class="align-right var good grp-vol-chg">▼ -2.7%</td><td class="align-right num grp-sev-curr">4,538</td><td class="align-right num grp-sev-prev">1,919</td><td class="align-right var bad grp-sev-chg">▲ +136.5%</td><td class="align-right pct grp-inv-curr">6.3%</td><td class="align-right pct grp-inv-prev">6.4%</td><td class="align-right var good grp-inv-chg">▼ -0.2pp</td></tr>
+<tr class="odd"><td class="ou-name">ANZ</td><td class="align-right num grp-vol-curr">47,925</td><td class="align-right num grp-vol-prev">50,681</td><td class="align-right var good grp-vol-chg">▼ -5.4%</td><td class="align-right num grp-sev-curr">4,251</td><td class="align-right num grp-sev-prev">1,816</td><td class="align-right var bad grp-sev-chg">▲ +134.1%</td><td class="align-right pct grp-inv-curr">4.7%</td><td class="align-right pct grp-inv-prev">4.8%</td><td class="align-right var good grp-inv-chg">▼ -0.1pp</td></tr>
+<tr class="even"><td class="ou-name">LATAM</td><td class="align-right num grp-vol-curr">43,930</td><td class="align-right num grp-vol-prev">45,809</td><td class="align-right var good grp-vol-chg">▼ -4.1%</td><td class="align-right num grp-sev-curr">5,208</td><td class="align-right num grp-sev-prev">3,693</td><td class="align-right var bad grp-sev-chg">▲ +41.0%</td><td class="align-right pct grp-inv-curr">7.8%</td><td class="align-right pct grp-inv-prev">7.4%</td><td class="align-right var bad grp-inv-chg">▲ +0.4pp</td></tr>
+<tr class="odd"><td class="ou-name">EMEA FRANCE</td><td class="align-right num grp-vol-curr">34,624</td><td class="align-right num grp-vol-prev">36,072</td><td class="align-right var good grp-vol-chg">▼ -4.0%</td><td class="align-right num grp-sev-curr">3,432</td><td class="align-right num grp-sev-prev">1,802</td><td class="align-right var bad grp-sev-chg">▲ +90.5%</td><td class="align-right pct grp-inv-curr">6.0%</td><td class="align-right pct grp-inv-prev">5.8%</td><td class="align-right var bad grp-inv-chg">▲ +0.2pp</td></tr>
+<tr class="even"><td class="ou-name">EMEA CENTRAL</td><td class="align-right num grp-vol-curr">31,530</td><td class="align-right num grp-vol-prev">32,959</td><td class="align-right var good grp-vol-chg">▼ -4.3%</td><td class="align-right num grp-sev-curr">2,888</td><td class="align-right num grp-sev-prev">1,230</td><td class="align-right var bad grp-sev-chg">▲ +134.8%</td><td class="align-right pct grp-inv-curr">6.1%</td><td class="align-right pct grp-inv-prev">6.4%</td><td class="align-right var good grp-inv-chg">▼ -0.3pp</td></tr>
+<tr class="odd"><td class="ou-name">GCR</td><td class="align-right num grp-vol-curr">5,102</td><td class="align-right num grp-vol-prev">7,032</td><td class="align-right var good grp-vol-chg">▼ -27.4%</td><td class="align-right num grp-sev-curr">517</td><td class="align-right num grp-sev-prev">449</td><td class="align-right var bad grp-sev-chg">▲ +15.1%</td><td class="align-right pct grp-inv-curr">3.4%</td><td class="align-right pct grp-inv-prev">3.6%</td><td class="align-right var good grp-inv-chg">▼ -0.2pp</td></tr>
+<tr class="total-row"><td class="ou-name">GRAND TOTAL</td><td class="align-right num grp-vol-curr">1,583,695</td><td class="align-right num grp-vol-prev">1,732,853</td><td class="align-right var good grp-vol-chg">▼ -8.6%</td><td class="align-right num grp-sev-curr">165,880</td><td class="align-right num grp-sev-prev">101,503</td><td class="align-right var bad grp-sev-chg">▲ +63.4%</td><td class="align-right pct grp-inv-curr">4.0%</td><td class="align-right pct grp-inv-prev">4.0%</td><td class="align-right var good grp-inv-chg">▼ -0.0pp</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+
+
+</div>
+
+<hr class="section-divider"/>
+
+<!-- ══════════════════════════════════════════════════
+     SECTION 2: SEV-1 DEEP DIVE
+══════════════════════════════════════════════════ -->
+<div class="section-label" id="sec-sev1">
+  <span>Section 2</span> Sev-1 Case Analysis — Overall &amp; Signature Deep Dive
+</div>
+
+<div class="sev1-section">
+  <div class="container">
+    <div id="sec-sev1-overall"></div>
+
+<!-- ═══════════════════════════════════════════════════════ SECTION 1 ═══ -->
+<h2>Section 1 — Overall View (All Support Tiers)</h2>
+
+<h3>Headline KPIs — Overall</h3>
+<div class='kpi-row'>
+  <div class='kpi'><div class='label'>Overall Accounts</div><div class='value'>331,888</div><div class='delta'>as of March 2026</div></div>
+  <div class='kpi'><div class='label'>Sev1 Case Creator Accounts</div><div class='value'>34,131</div><div class='delta'>10.3% of total accounts</div></div>
+  <div class='kpi'><div class='label'>Total Sev-1 Cases (12M)</div><div class='value'>165,845</div><div class='delta'>May 2025 – Apr 2026</div></div>
+</div>
+
+<h3>1.1 Overall Accounts by OU</h3>
+<div class='grid-3'>
+  <div class='card'><div id='ch_ou_pct100' style='height:580px;width:100%;'></div></div>
+  <div class='card'><div id='ch_ou_vol' style='height:580px;width:100%;'></div></div>
+  <div class='card'><div id='ch_ou_cpa' style='height:580px;width:100%;'></div></div>
+</div>
+
+<h3>1.2 Distribution — How Cases Distribute Across All Accounts</h3>
+<div class='grid-3'>
+  <div class='card'><div id='ch_skew_all' style='height:480px;width:100%;'></div></div>
+  <div class='card'>
+    <h3 style='margin-top:0;'>Top 10 Accounts by Sev-1 Case Volume</h3>
+    <table>
+    <thead><tr><th class='num'>#</th><th>Account</th><th>Entitlement</th><th class='num'>Sev-1 Cases</th></tr></thead>
+    <tbody>
+      <tr><td class='num'>1</td><td class='acct-name' title='PepsiCo, Inc.'>PepsiCo, Inc.</td><td>Signature</td><td class='num'>233</td></tr>
+      <tr><td class='num'>2</td><td class='acct-name' title='FEfundinfo (Main Org)'>FEfundinfo (Main Org)</td><td>Premier</td><td class='num'>221</td></tr>
+      <tr><td class='num'>3</td><td class='acct-name' title='AT&T Services, Inc.'>AT&amp;T Services, Inc.</td><td>Signature</td><td class='num'>168</td></tr>
+      <tr><td class='num'>4</td><td class='acct-name' title='Google LLC'>Google LLC</td><td>Signature</td><td class='num'>158</td></tr>
+      <tr><td class='num'>5</td><td class='acct-name' title='LVMH Moet Hennessy'>LVMH Moet Hennessy</td><td>Signature</td><td class='num'>153</td></tr>
+      <tr><td class='num'>6</td><td class='acct-name' title='Bank of America, N.A.'>Bank of America, N.A.</td><td>Signature</td><td class='num'>146</td></tr>
+      <tr><td class='num'>7</td><td class='acct-name' title='Bharti Airtel Limited'>Bharti Airtel Limited</td><td>Signature</td><td class='num'>134</td></tr>
+      <tr><td class='num'>8</td><td class='acct-name' title='Cloud Hop Kenya'>Cloud Hop Kenya</td><td>Standard</td><td class='num'>129</td></tr>
+      <tr><td class='num'>9</td><td class='acct-name' title='Fiery LLC'>Fiery LLC</td><td>Premier</td><td class='num'>122</td></tr>
+      <tr><td class='num'>10</td><td class='acct-name' title='Abbott Laboratories'>Abbott Laboratories</td><td>Signature</td><td class='num'>123</td></tr>
+    </tbody>
+    </table>
+  </div>
+  <div class='card'>
+    <h3 style='margin-top:0;'>Top 10 Companies by Sev-1 Case Volume</h3>
+    <table>
+    <thead><tr><th class='num'>#</th><th>Company Name</th><th>Entitlement (max)</th><th class='num'>Sev-1 Cases</th></tr></thead>
+    <tbody>
+      <tr><td class='num'>1</td><td class='acct-name' title='Amazon.com, Inc.'>Amazon.com, Inc.</td><td>Signature</td><td class='num'>334</td></tr>
+      <tr><td class='num'>2</td><td class='acct-name' title='KOTAK MAHINDRA BANK LIMITED'>KOTAK MAHINDRA BANK LIMITED</td><td>Premier</td><td class='num'>238</td></tr>
+      <tr><td class='num'>3</td><td class='acct-name' title='Pepsico, Inc.'>Pepsico, Inc.</td><td>Signature</td><td class='num'>234</td></tr>
+      <tr><td class='num'>4</td><td class='acct-name' title='Financial Express (Holdings) Ltd.'>Financial Express (Holdings) Ltd.</td><td>Premier</td><td class='num'>221</td></tr>
+      <tr><td class='num'>5</td><td class='acct-name' title='Idfc First Bank Limited'>Idfc First Bank Limited</td><td>Premier</td><td class='num'>191</td></tr>
+      <tr><td class='num'>6</td><td class='acct-name' title='Alphabet Inc.'>Alphabet Inc.</td><td>Signature</td><td class='num'>177</td></tr>
+      <tr><td class='num'>7</td><td class='acct-name' title='BHARTI AIRTEL LIMITED'>BHARTI AIRTEL LIMITED</td><td>Signature</td><td class='num'>146</td></tr>
+      <tr><td class='num'>8</td><td class='acct-name' title='Iqvia Holdings Inc.'>Iqvia Holdings Inc.</td><td>Premier</td><td class='num'>145</td></tr>
+      <tr><td class='num'>9</td><td class='acct-name' title='PG&E Corporation'>PG&amp;E Corporation</td><td>Signature</td><td class='num'>145</td></tr>
+      <tr><td class='num'>10</td><td class='acct-name' title='LVMH MOET HENNESSY LOUIS VUITTON'>LVMH MOET HENNESSY LOUIS VUITTON</td><td>Signature</td><td class='num'>143</td></tr>
+    </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ SECTION 2 ═══ -->
+<h2 id='sec-sev1-signature'>Section 2 — Signature Accounts Deep Dive</h2>
+
+<h3>Headline KPIs — Signature</h3>
+<div class='kpi-row'>
+  <div class='kpi'><div class='label'>Total Signature Accounts</div><div class='value'>6,129</div><div class='delta'>as of March 2026</div></div>
+  <div class='kpi'><div class='label'>Sev1 Case Creator Accounts</div><div class='value'>3,626</div><div class='delta'>59.2% of Signature accounts</div></div>
+  <div class='kpi'><div class='label'>Total Sev-1 Cases (12M)</div><div class='value'>25,929</div><div class='delta'>May 2025 – Apr 2026</div></div>
+</div>
+
+<h3>2.1 Signature Accounts by OU</h3>
+<div class='grid-3'>
+  <div class='card'><div id='ch_sig_pct100' style='height:580px;width:100%;'></div></div>
+  <div class='card'><div id='ch_sig_vol' style='height:580px;width:100%;'></div></div>
+  <div class='card'><div id='ch_sig_cpa' style='height:580px;width:100%;'></div></div>
+</div>
+
+<h3>2.2 Distribution — How Cases Distribute Across Signature Accounts</h3>
+<div class='grid-3'>
+  <div class='card'><div id='ch_sig_skew' style='height:480px;width:100%;'></div></div>
+  <div class='card'>
+    <h3 style='margin-top:0;'>Top 10 Signature Accounts by Sev-1 Case Volume</h3>
+    <table>
+    <thead><tr><th class='num'>#</th><th>Account</th><th>Entitlement</th><th class='num'>Sev-1 Cases</th></tr></thead>
+    <tbody>
+      <tr><td class='num'>1</td><td class='acct-name' title='PepsiCo, Inc.'>PepsiCo, Inc.</td><td>Signature</td><td class='num'>226</td></tr>
+      <tr><td class='num'>2</td><td class='acct-name' title='Google LLC'>Google LLC</td><td>Signature</td><td class='num'>157</td></tr>
+      <tr><td class='num'>3</td><td class='acct-name' title='LVMH Moet Hennessy - Louis Vuitton SE'>LVMH Moet Hennessy - Louis Vuitton SE</td><td>Signature</td><td class='num'>143</td></tr>
+      <tr><td class='num'>4</td><td class='acct-name' title='Bank of America, N.A.'>Bank of America, N.A.</td><td>Signature</td><td class='num'>141</td></tr>
+      <tr><td class='num'>5</td><td class='acct-name' title='Bharti Airtel Limited'>Bharti Airtel Limited</td><td>Signature</td><td class='num'>133</td></tr>
+      <tr><td class='num'>6</td><td class='acct-name' title='Genpact India Private Limited'>Genpact India Private Limited</td><td>Signature</td><td class='num'>110</td></tr>
+      <tr><td class='num'>7</td><td class='acct-name' title='Abbott Laboratories'>Abbott Laboratories</td><td>Signature</td><td class='num'>109</td></tr>
+      <tr><td class='num'>8</td><td class='acct-name' title='Autodesk, Inc.'>Autodesk, Inc.</td><td>Signature</td><td class='num'>107</td></tr>
+      <tr><td class='num'>9</td><td class='acct-name' title='Pacific Gas & Electric Company'>Pacific Gas &amp; Electric Company</td><td>Signature</td><td class='num'>105</td></tr>
+      <tr><td class='num'>10</td><td class='acct-name' title='JPMorgan Chase Bank, N.A.'>JPMorgan Chase Bank, N.A.</td><td>Premier</td><td class='num'>103</td></tr>
+    </tbody>
+    </table>
+  </div>
+  <div class='card'>
+    <h3 style='margin-top:0;'>Top 10 Signature Companies by Sev-1 Case Volume</h3>
+    <table>
+    <thead><tr><th class='num'>#</th><th>Company Name</th><th>Entitlement</th><th class='num'>Sev-1 Cases</th></tr></thead>
+    <tbody>
+      <tr><td class='num'>1</td><td class='acct-name' title='Amazon.com, Inc.'>Amazon.com, Inc.</td><td>Signature</td><td class='num'>328</td></tr>
+      <tr><td class='num'>2</td><td class='acct-name' title='Pepsico, Inc.'>Pepsico, Inc.</td><td>Signature</td><td class='num'>262</td></tr>
+      <tr><td class='num'>3</td><td class='acct-name' title='Alphabet Inc.'>Alphabet Inc.</td><td>Signature</td><td class='num'>182</td></tr>
+      <tr><td class='num'>4</td><td class='acct-name' title='BHARTI AIRTEL LIMITED'>BHARTI AIRTEL LIMITED</td><td>Signature</td><td class='num'>146</td></tr>
+      <tr><td class='num'>5</td><td class='acct-name' title='PG&e Corporation'>PG&amp;e Corporation</td><td>Signature</td><td class='num'>144</td></tr>
+      <tr><td class='num'>6</td><td class='acct-name' title='Bank of America Corporation'>Bank of America Corporation</td><td>Signature</td><td class='num'>141</td></tr>
+      <tr><td class='num'>7</td><td class='acct-name' title='Johnson & Johnson'>Johnson &amp; Johnson</td><td>Signature</td><td class='num'>130</td></tr>
+      <tr><td class='num'>8</td><td class='acct-name' title='Stellantis N.V.'>Stellantis N.V.</td><td>Signature</td><td class='num'>129</td></tr>
+      <tr><td class='num'>9</td><td class='acct-name' title='Deutsche Telekom AG'>Deutsche Telekom AG</td><td>Signature</td><td class='num'>128</td></tr>
+      <tr><td class='num'>10</td><td class='acct-name' title='Ford Motor Company'>Ford Motor Company</td><td>Signature</td><td class='num'>127</td></tr>
+    </tbody>
+    </table>
+  </div>
+</div>
+
+<h2 class='ou-section' id='sec-sev1-ou-all'>Top 10 Sev-1 Accounts — All Accounts</h2>
+<div class='grid-ou'>
+<div class='card ou-card'>
+<div class='ou-title'>AMER ACC CBS</div>
+<table><thead><tr><th class='num'>#</th><th>Account</th><th>Entitlement</th><th class='num'>Cases</th></tr></thead><tbody>
+<tr><td class='num'>1</td><td class='acct-name' title='CBRE Inc. (CIQ - Corporate Account - OrgID 00Di0000000amTo)'>CBRE Inc. (CIQ - Corporate Account - OrgID 00Di0000000amTo)</td><td>Premier</td><td class='num'>86</td></tr>
+<tr><td class='num'>2</td><td class='acct-name' title='NTT DATA Americas, Inc.'>NTT DATA Americas, Inc.</td><td>Signature</td><td class='num'>81</td></tr>
+<tr><td class='num'>3</td><td class='acct-name' title='WHR Operations, LLC'>WHR Operations, LLC</td><td>Signature</td><td class='num'>62</td></tr>
+<tr><td class='num'>4</td><td class='acct-name' title='Indeed, Inc'>Indeed, Inc</td><td>Signature</td><td class='num'>61</td></tr>
+<tr><td class='num'>5</td><td class='acct-name' title='Proquire LLC'>Proquire LLC</td><td>Premier</td><td class='num'>58</td></tr>
+<tr><td class='num'>6</td><td class='acct-name' title='Royal Caribbean Cruises Ltd.'>Royal Caribbean Cruises Ltd.</td><td>Standard</td><td class='num'>56</td></tr>
+<tr><td class='num'>7</td><td class='acct-name' title='KPMG LLP'>KPMG LLP</td><td>Signature</td><td class='num'>56</td></tr>
+<tr><td class='num'>8</td><td class='acct-name' title='Deloitte Consulting LLP'>Deloitte Consulting LLP</td><td>Signature</td><td class='num'>55</td></tr>
+<tr><td class='num'>9</td><td class='acct-name' title='Expedia, Inc.'>Expedia, Inc.</td><td>Signature</td><td class='num'>51</td></tr>
+<tr><td class='num'>10</td><td class='acct-name' title='Six Continents Hotels, Inc.'>Six Continents Hotels, Inc.</td><td>Signature</td><td class='num'>49</td></tr>
+</tbody></table></div>
+<div class='card ou-card'>
+<div class='ou-title'>AMER ACC TMT</div>
+<table><thead><tr><th class='num'>#</th><th>Account</th><th>Entitlement</th><th class='num'>Cases</th></tr></thead><tbody>
+<tr><td class='num'>1</td><td class='acct-name' title='AT&T Services, Inc.'>AT&T Services, Inc.</td><td>Signature</td><td class='num'>168</td></tr>
+<tr><td class='num'>2</td><td class='acct-name' title='Google LLC'>Google LLC</td><td>Signature</td><td class='num'>158</td></tr>
+<tr><td class='num'>3</td><td class='acct-name' title='Fiery LLC'>Fiery LLC</td><td>Premier</td><td class='num'>122</td></tr>
+<tr><td class='num'>4</td><td class='acct-name' title='Autodesk, Inc.'>Autodesk, Inc.</td><td>Signature</td><td class='num'>107</td></tr>
+<tr><td class='num'>5</td><td class='acct-name' title='Omnicom Media Group Holdings Inc.'>Omnicom Media Group Holdings Inc.</td><td>Signature</td><td class='num'>97</td></tr>
+<tr><td class='num'>6</td><td class='acct-name' title='Palo Alto Networks, Inc.'>Palo Alto Networks, Inc.</td><td>Signature</td><td class='num'>80</td></tr>
+<tr><td class='num'>7</td><td class='acct-name' title='Zscaler, Inc.'>Zscaler, Inc.</td><td>Premier</td><td class='num'>77</td></tr>
+<tr><td class='num'>8</td><td class='acct-name' title='Workday, Inc.'>Workday, Inc.</td><td>Signature</td><td class='num'>75</td></tr>
+<tr><td class='num'>9</td><td class='acct-name' title='BILL Operations, LLC (on behalf of itself and its Affiliates)'>BILL Operations, LLC (on behalf of itself and its Affiliates)</td><td>Premier</td><td class='num'>72</td></tr>
+<tr><td class='num'>10</td><td class='acct-name' title='Meta Platforms, Inc.'>Meta Platforms, Inc.</td><td>Signature</td><td class='num'>70</td></tr>
+</tbody></table></div>
+<div class='card ou-card'>
+<div class='ou-title'>AMER PACE</div>
+<table><thead><tr><th class='num'>#</th><th>Account</th><th>Entitlement</th><th class='num'>Cases</th></tr></thead><tbody>
+<tr><td class='num'>1</td><td class='acct-name' title='PepsiCo, Inc.'>PepsiCo, Inc.</td><td>Signature</td><td class='num'>233</td></tr>
+<tr><td class='num'>2</td><td class='acct-name' title='Pacific Gas & Electric Company'>Pacific Gas & Electric Company</td><td>Signature</td><td class='num'>108</td></tr>
+<tr><td class='num'>3</td><td class='acct-name' title='Haier US Appliance Solutions, Inc. DBA GE Appliances*'>Haier US Appliance Solutions, Inc. DBA GE Appliances*</td><td>Signature</td><td class='num'>94</td></tr>
+<tr><td class='num'>4</td><td class='acct-name' title='General Motors Holdings, LLC.'>General Motors Holdings, LLC.</td><td>Signature</td><td class='num'>74</td></tr>
+<tr><td class='num'>5</td><td class='acct-name' title='Under Armour, Inc.'>Under Armour, Inc.</td><td>Signature</td><td class='num'>73</td></tr>
+<tr><td class='num'>6</td><td class='acct-name' title='Stand Out for Good, Inc.'>Stand Out for Good, Inc.</td><td>Premier</td><td class='num'>70</td></tr>
+<tr><td class='num'>7</td><td class='acct-name' title='Constellation NewEnergy, Inc.'>Constellation NewEnergy, Inc.</td><td>Premier</td><td class='num'>70</td></tr>
+<tr><td class='num'>8</td><td class='acct-name' title='7-Eleven, Inc. (MAIN)'>7-Eleven, Inc. (MAIN)</td><td>Premier</td><td class='num'>64</td></tr>
+<tr><td class='num'>9</td><td class='acct-name' title='Ford Retail - NA'>Ford Retail - NA</td><td>Signature</td><td class='num'>64</td></tr>
+<tr><td class='num'>10</td><td class='acct-name' title='The Children’s Place Services Company, LLC'>The Children’s Place Services Company, LLC</td><td>Signature</td><td class='num'>63</td></tr>
+</tbody></table></div>
+<div class='card ou-card'>
+<div class='ou-title'>AMER REG</div>
+<table><thead><tr><th class='num'>#</th><th>Account</th><th>Entitlement</th><th class='num'>Cases</th></tr></thead><tbody>
+<tr><td class='num'>1</td><td class='acct-name' title='Bank of America, N.A.'>Bank of America, N.A.</td><td>Signature</td><td class='num'>146</td></tr>
+<tr><td class='num'>2</td><td class='acct-name' title='Abbott Laboratories'>Abbott Laboratories</td><td>Signature</td><td class='num'>123</td></tr>
+<tr><td class='num'>3</td><td class='acct-name' title='JPMorgan Chase Bank, National Association'>JPMorgan Chase Bank, National Association</td><td>Signature</td><td class='num'>113</td></tr>
+<tr><td class='num'>4</td><td class='acct-name' title='ADP, Inc.'>ADP, Inc.</td><td>Signature</td><td class='num'>98</td></tr>
+<tr><td class='num'>5</td><td class='acct-name' title='Sobeys Capital Incorporated'>Sobeys Capital Incorporated</td><td>Signature</td><td class='num'>88</td></tr>
+<tr><td class='num'>6</td><td class='acct-name' title='Canadian Imperial Bank Of Commerce'>Canadian Imperial Bank Of Commerce</td><td>Signature</td><td class='num'>81</td></tr>
+<tr><td class='num'>7</td><td class='acct-name' title='McKesson Corporation'>McKesson Corporation</td><td>Premier</td><td class='num'>76</td></tr>
+<tr><td class='num'>8</td><td class='acct-name' title='Citibank, N.A.'>Citibank, N.A.</td><td>Tab Premium</td><td class='num'>75</td></tr>
+<tr><td class='num'>9</td><td class='acct-name' title='MS Financing LLC'>MS Financing LLC</td><td>Signature</td><td class='num'>74</td></tr>
+<tr><td class='num'>10</td><td class='acct-name' title='Auto Club Group'>Auto Club Group</td><td>Signature</td><td class='num'>73</td></tr>
+</tbody></table></div>
+<div class='card ou-card'>
+<div class='ou-title'>ANZ</div>
+<table><thead><tr><th class='num'>#</th><th>Account</th><th>Entitlement</th><th class='num'>Cases</th></tr></thead><tbody>
+<tr><td class='num'>1</td><td class='acct-name' title='Flight Centre Travel Group Limited'>Flight Centre Travel Group Limited</td><td>Premier</td><td class='num'>74</td></tr>
+<tr><td class='num'>2</td><td class='acct-name' title='Carnac Group - ISV Edition'>Carnac Group - ISV Edition</td><td>Standard</td><td class='num'>68</td></tr>
+<tr><td class='num'>3</td><td class='acct-name' title='Jetstar Airways Pty Ltd'>Jetstar Airways Pty Ltd</td><td>Premier</td><td class='num'>40</td></tr>
+<tr><td class='num'>4</td><td class='acct-name' title='Team Global Express Pty Ltd'>Team Global Express Pty Ltd</td><td>Premier</td><td class='num'>38</td></tr>
+<tr><td class='num'>5</td><td class='acct-name' title='NBN Co Limited'>NBN Co Limited</td><td>Signature</td><td class='num'>38</td></tr>
+<tr><td class='num'>6</td><td class='acct-name' title='Australia and New Zealand Banking Group Limited'>Australia and New Zealand Banking Group Limited</td><td>Signature</td><td class='num'>34</td></tr>
+<tr><td class='num'>7</td><td class='acct-name' title='Xero Limited'>Xero Limited</td><td>Signature</td><td class='num'>33</td></tr>
+<tr><td class='num'>8</td><td class='acct-name' title='ENGIE INFORMATION ET TECHNOLOGIES SA'>ENGIE INFORMATION ET TECHNOLOGIES SA</td><td>Premier</td><td class='num'>32</td></tr>
+<tr><td class='num'>9</td><td class='acct-name' title='One New Zealand Group Limited'>One New Zealand Group Limited</td><td>Signature</td><td class='num'>32</td></tr>
+<tr><td class='num'>10</td><td class='acct-name' title='Healthcare Australia Pty Ltd'>Healthcare Australia Pty Ltd</td><td>Premier</td><td class='num'>32</td></tr>
+</tbody></table></div>
+<div class='card ou-card'>
+<div class='ou-title'>EMEA CENTRAL</div>
+<table><thead><tr><th class='num'>#</th><th>Account</th><th>Entitlement</th><th class='num'>Cases</th></tr></thead><tbody>
+<tr><td class='num'>1</td><td class='acct-name' title='Mercedes-Benz Group AG'>Mercedes-Benz Group AG</td><td>Premier</td><td class='num'>97</td></tr>
+<tr><td class='num'>2</td><td class='acct-name' title='Telefónica Germany GmbH & Co. OHG'>Telefónica Germany GmbH & Co. OHG</td><td>Premier</td><td class='num'>72</td></tr>
+<tr><td class='num'>3</td><td class='acct-name' title='Linde GmbH'>Linde GmbH</td><td>Premier</td><td class='num'>54</td></tr>
+<tr><td class='num'>4</td><td class='acct-name' title='Volkswagen AG'>Volkswagen AG</td><td>Premier</td><td class='num'>53</td></tr>
+<tr><td class='num'>5</td><td class='acct-name' title='Evident Europe GmbH'>Evident Europe GmbH</td><td>Premier</td><td class='num'>46</td></tr>
+<tr><td class='num'>6</td><td class='acct-name' title='Siemens Corporation'>Siemens Corporation</td><td>Premier</td><td class='num'>44</td></tr>
+<tr><td class='num'>7</td><td class='acct-name' title='TeamViewer Germany GmbH'>TeamViewer Germany GmbH</td><td>Standard</td><td class='num'>42</td></tr>
+<tr><td class='num'>8</td><td class='acct-name' title='Bayerische Motoren Werke AG'>Bayerische Motoren Werke AG</td><td>Premier</td><td class='num'>37</td></tr>
+<tr><td class='num'>9</td><td class='acct-name' title='ZF Friedrichshafen AG (AAM)'>ZF Friedrichshafen AG (AAM)</td><td>Premier</td><td class='num'>36</td></tr>
+</tbody></table></div>
+<div class='card ou-card'>
+<div class='ou-title'>EMEA FRANCE</div>
+<table><thead><tr><th class='num'>#</th><th>Account</th><th>Entitlement</th><th class='num'>Cases</th></tr></thead><tbody>
+<tr><td class='num'>1</td><td class='acct-name' title='LVMH Moet Hennessy - Louis Vuitton SE'>LVMH Moet Hennessy - Louis Vuitton SE</td><td>Signature</td><td class='num'>153</td></tr>
+<tr><td class='num'>2</td><td class='acct-name' title='RENAULT SAS'>RENAULT SAS</td><td>Premier</td><td class='num'>86</td></tr>
+<tr><td class='num'>3</td><td class='acct-name' title='Adecco IT Services'>Adecco IT Services</td><td>Premier</td><td class='num'>63</td></tr>
+<tr><td class='num'>4</td><td class='acct-name' title='GROUPE BATISANTE SAS'>GROUPE BATISANTE SAS</td><td>Premier</td><td class='num'>57</td></tr>
+<tr><td class='num'>5</td><td class='acct-name' title='ENGIE INFORMATION ET TECHNOLOGIES SA'>ENGIE INFORMATION ET TECHNOLOGIES SA</td><td>Premier</td><td class='num'>54</td></tr>
+<tr><td class='num'>6</td><td class='acct-name' title='SANOFI WINTHROP INDUSTRIE'>SANOFI WINTHROP INDUSTRIE</td><td>Premier</td><td class='num'>49</td></tr>
+<tr><td class='num'>7</td><td class='acct-name' title='L'OREAL SA'>L'OREAL SA</td><td>Signature</td><td class='num'>47</td></tr>
+<tr><td class='num'>8</td><td class='acct-name' title='CHANEL LTD'>CHANEL LTD</td><td>Premier</td><td class='num'>39</td></tr>
+<tr><td class='num'>9</td><td class='acct-name' title='Capgemini Service SAS'>Capgemini Service SAS</td><td>Premier</td><td class='num'>37</td></tr>
+<tr><td class='num'>10</td><td class='acct-name' title='Schneider Electric USA, Inc'>Schneider Electric USA, Inc</td><td>Signature</td><td class='num'>32</td></tr>
+</tbody></table></div>
+<div class='card ou-card'>
+<div class='ou-title'>EMEA NORTH</div>
+<table><thead><tr><th class='num'>#</th><th>Account</th><th>Entitlement</th><th class='num'>Cases</th></tr></thead><tbody>
+<tr><td class='num'>1</td><td class='acct-name' title='ABB Information Systems Ltd.'>ABB Information Systems Ltd.</td><td>Premier</td><td class='num'>125</td></tr>
+<tr><td class='num'>2</td><td class='acct-name' title='Takeaway.com Central Core B.V..'>Takeaway.com Central Core B.V..</td><td>Premier</td><td class='num'>58</td></tr>
+<tr><td class='num'>3</td><td class='acct-name' title='Takeda Pharmaceuticals International AG'>Takeda Pharmaceuticals International AG</td><td>Premier</td><td class='num'>57</td></tr>
+<tr><td class='num'>4</td><td class='acct-name' title='Bobst Mex SA'>Bobst Mex SA</td><td>Premier</td><td class='num'>45</td></tr>
+<tr><td class='num'>5</td><td class='acct-name' title='Philip Morris International IT Service Center Sàrl'>Philip Morris International IT Service Center Sàrl</td><td>Signature</td><td class='num'>42</td></tr>
+<tr><td class='num'>6</td><td class='acct-name' title='Randstad R-One Northern European org'>Randstad R-One Northern European org</td><td>Signature</td><td class='num'>42</td></tr>
+<tr><td class='num'>7</td><td class='acct-name' title='Tecan Trading AG'>Tecan Trading AG</td><td>Premier</td><td class='num'>38</td></tr>
+<tr><td class='num'>8</td><td class='acct-name' title='PANDORA A/S'>PANDORA A/S</td><td>Signature</td><td class='num'>37</td></tr>
+<tr><td class='num'>9</td><td class='acct-name' title='Accell Global B.V.'>Accell Global B.V.</td><td>Premier</td><td class='num'>35</td></tr>
+</tbody></table></div>
+<div class='card ou-card'>
+<div class='ou-title'>EMEA SOUTH</div>
+<table><thead><tr><th class='num'>#</th><th>Account</th><th>Entitlement</th><th class='num'>Cases</th></tr></thead><tbody>
+<tr><td class='num'>1</td><td class='acct-name' title='Aldar Properties PJSC'>Aldar Properties PJSC</td><td>Premier</td><td class='num'>91</td></tr>
+<tr><td class='num'>2</td><td class='acct-name' title='RAK Economic Zone Authority'>RAK Economic Zone Authority</td><td>Premier</td><td class='num'>68</td></tr>
+<tr><td class='num'>3</td><td class='acct-name' title='ABSA Bank Limited'>ABSA Bank Limited</td><td>Signature</td><td class='num'>60</td></tr>
+<tr><td class='num'>4</td><td class='acct-name' title='C.G.R FZE'>C.G.R FZE</td><td>Premier</td><td class='num'>54</td></tr>
+<tr><td class='num'>5</td><td class='acct-name' title='Sapphire Retail Limited'>Sapphire Retail Limited</td><td>Signature</td><td class='num'>50</td></tr>
+<tr><td class='num'>6</td><td class='acct-name' title='Mohamed Abdulrahman Al-Bahar LLC'>Mohamed Abdulrahman Al-Bahar LLC</td><td>Premier</td><td class='num'>47</td></tr>
+<tr><td class='num'>7</td><td class='acct-name' title='Jazeera Airways Co'>Jazeera Airways Co</td><td>Standard</td><td class='num'>46</td></tr>
+<tr><td class='num'>8</td><td class='acct-name' title='United Bank Limited Pakistan'>United Bank Limited Pakistan</td><td>Standard</td><td class='num'>42</td></tr>
+<tr><td class='num'>9</td><td class='acct-name' title='Dubai Holding Entertainment - Org2'>Dubai Holding Entertainment - Org2</td><td>Premier</td><td class='num'>41</td></tr>
+</tbody></table></div>
+<div class='card ou-card'>
+<div class='ou-title'>GCR</div>
+<table><thead><tr><th class='num'>#</th><th>Account</th><th>Entitlement</th><th class='num'>Cases</th></tr></thead><tbody>
+<tr><td class='num'>1</td><td class='acct-name' title='Samsonite Asia Limited'>Samsonite Asia Limited</td><td>Premier</td><td class='num'>52</td></tr>
+<tr><td class='num'>2</td><td class='acct-name' title='Hong Kong Telecommunications (HKT) Limited'>Hong Kong Telecommunications (HKT) Limited</td><td>Signature</td><td class='num'>48</td></tr>
+<tr><td class='num'>3</td><td class='acct-name' title='Cathay Pacific Airways Limited'>Cathay Pacific Airways Limited</td><td>Premier</td><td class='num'>37</td></tr>
+<tr><td class='num'>4</td><td class='acct-name' title='Airport Authority'>Airport Authority</td><td>Premier</td><td class='num'>16</td></tr>
+<tr><td class='num'>5</td><td class='acct-name' title='Toys"R"Us Asia Limited'>Toys"R"Us Asia Limited</td><td>Premier</td><td class='num'>12</td></tr>
+<tr><td class='num'>6</td><td class='acct-name' title='Mandarin Oriental International Limited'>Mandarin Oriental International Limited</td><td>Premier</td><td class='num'>10</td></tr>
+<tr><td class='num'>7</td><td class='acct-name' title='Jiahua Chemicals Inc'>Jiahua Chemicals Inc</td><td>Premier</td><td class='num'>9</td></tr>
+<tr><td class='num'>8</td><td class='acct-name' title='Hong Kong Exchanges and Clearing Limited'>Hong Kong Exchanges and Clearing Limited</td><td>Standard</td><td class='num'>9</td></tr>
+<tr><td class='num'>9</td><td class='acct-name' title='Beijing Volcano Engine Technology Co., Ltd'>Beijing Volcano Engine Technology Co., Ltd</td><td>Premier</td><td class='num'>8</td></tr>
+<tr><td class='num'>10</td><td class='acct-name' title='BMW Brilliance Automotive Ltd.'>BMW Brilliance Automotive Ltd.</td><td>Standard</td><td class='num'>8</td></tr>
+</tbody></table></div>
+<div class='card ou-card'>
+<div class='ou-title'>JP</div>
+<table><thead><tr><th class='num'>#</th><th>Account</th><th>Entitlement</th><th class='num'>Cases</th></tr></thead><tbody>
+<tr><td class='num'>1</td><td class='acct-name' title='Yokogawa Electric Corporation (YODA)'>Yokogawa Electric Corporation (YODA)</td><td>Premier</td><td class='num'>105</td></tr>
+<tr><td class='num'>2</td><td class='acct-name' title='OMRON Corporation'>OMRON Corporation</td><td>Premier</td><td class='num'>41</td></tr>
+<tr><td class='num'>3</td><td class='acct-name' title='Rakuten Group, Inc.'>Rakuten Group, Inc.</td><td>Premier</td><td class='num'>28</td></tr>
+<tr><td class='num'>4</td><td class='acct-name' title='ALL NIPPON AIRWAYS CO., LTD.'>ALL NIPPON AIRWAYS CO., LTD.</td><td>Signature</td><td class='num'>20</td></tr>
+<tr><td class='num'>5</td><td class='acct-name' title='HYUNDAI AUTOEVER CORPORATION. (HMA)'>HYUNDAI AUTOEVER CORPORATION. (HMA)</td><td>Premier</td><td class='num'>19</td></tr>
+<tr><td class='num'>6</td><td class='acct-name' title='HYUNDAI AUTOEVER CORPORATION.(EU)'>HYUNDAI AUTOEVER CORPORATION.(EU)</td><td>Premier</td><td class='num'>18</td></tr>
+<tr><td class='num'>7</td><td class='acct-name' title='Amorepacific Corporation'>Amorepacific Corporation</td><td>Standard</td><td class='num'>17</td></tr>
+<tr><td class='num'>8</td><td class='acct-name' title='LG Electronics Inc. (SvC)'>LG Electronics Inc. (SvC)</td><td>Signature</td><td class='num'>17</td></tr>
+<tr><td class='num'>9</td><td class='acct-name' title='YAMAGUCHI FINANCIAL GROUP, INC.'>YAMAGUCHI FINANCIAL GROUP, INC.</td><td>Standard</td><td class='num'>17</td></tr>
+<tr><td class='num'>10</td><td class='acct-name' title='Shiseido Company, Limited'>Shiseido Company, Limited</td><td>Premier</td><td class='num'>16</td></tr>
+</tbody></table></div>
+<div class='card ou-card'>
+<div class='ou-title'>LATAM</div>
+<table><thead><tr><th class='num'>#</th><th>Account</th><th>Entitlement</th><th class='num'>Cases</th></tr></thead><tbody>
+<tr><td class='num'>1</td><td class='acct-name' title='Telecom Argentina S.A.'>Telecom Argentina S.A.</td><td>Signature</td><td class='num'>62</td></tr>
+<tr><td class='num'>2</td><td class='acct-name' title='Banco Bradesco S.A.'>Banco Bradesco S.A.</td><td>Signature</td><td class='num'>59</td></tr>
+<tr><td class='num'>3</td><td class='acct-name' title='Banco C6 S.A.'>Banco C6 S.A.</td><td>Premier</td><td class='num'>50</td></tr>
+<tr><td class='num'>4</td><td class='acct-name' title='*Claro S.A.'>*Claro S.A.</td><td>Signature</td><td class='num'>46</td></tr>
+<tr><td class='num'>5</td><td class='acct-name' title='NEOENERGIA S.A.'>NEOENERGIA S.A.</td><td>Premier</td><td class='num'>45</td></tr>
+<tr><td class='num'>6</td><td class='acct-name' title='iFood.com Agencia de Restaurantes Online S.A.'>iFood.com Agencia de Restaurantes Online S.A.</td><td>Signature</td><td class='num'>44</td></tr>
+<tr><td class='num'>7</td><td class='acct-name' title='Enel Global Services S.r.l. (Enel Chile)'>Enel Global Services S.r.l. (Enel Chile)</td><td>Signature</td><td class='num'>42</td></tr>
+<tr><td class='num'>8</td><td class='acct-name' title='Colmena Seguros Riesgos Laborales S.A'>Colmena Seguros Riesgos Laborales S.A</td><td>Premier</td><td class='num'>41</td></tr>
+<tr><td class='num'>9</td><td class='acct-name' title='Liberty Iberoamerica S.L.U.'>Liberty Iberoamerica S.L.U.</td><td>Signature</td><td class='num'>38</td></tr>
+<tr><td class='num'>10</td><td class='acct-name' title='Natura & Co'>Natura & Co</td><td>Signature</td><td class='num'>38</td></tr>
+</tbody></table></div>
+<div class='card ou-card'>
+<div class='ou-title'>PS</div>
+<table><thead><tr><th class='num'>#</th><th>Account</th><th>Entitlement</th><th class='num'>Cases</th></tr></thead><tbody>
+<tr><td class='num'>1</td><td class='acct-name' title='HSE Digital'>HSE Digital</td><td>Premier</td><td class='num'>68</td></tr>
+<tr><td class='num'>2</td><td class='acct-name' title='The Dispute Service Ltd.'>The Dispute Service Ltd.</td><td>Premier</td><td class='num'>63</td></tr>
+<tr><td class='num'>3</td><td class='acct-name' title='EF Education First Ltd  Product: EF Language CRM'>EF Education First Ltd  Product: EF Language CRM</td><td>Premier</td><td class='num'>40</td></tr>
+<tr><td class='num'>4</td><td class='acct-name' title='U.S. Department of Veterans Affairs'>U.S. Department of Veterans Affairs</td><td>Signature</td><td class='num'>39</td></tr>
+<tr><td class='num'>5</td><td class='acct-name' title='Akshaya Patra USA 2nd Org'>Akshaya Patra USA 2nd Org</td><td>Standard</td><td class='num'>35</td></tr>
+<tr><td class='num'>6</td><td class='acct-name' title='WorkSafe Victoria'>WorkSafe Victoria</td><td>Signature</td><td class='num'>34</td></tr>
+<tr><td class='num'>7</td><td class='acct-name' title='Student Loans Company UK'>Student Loans Company UK</td><td>Premier</td><td class='num'>33</td></tr>
+<tr><td class='num'>8</td><td class='acct-name' title='Aurigo - GovCloud'>Aurigo - GovCloud</td><td>Premier</td><td class='num'>30</td></tr>
+<tr><td class='num'>9</td><td class='acct-name' title='Florida Commerce - 2nd Org'>Florida Commerce - 2nd Org</td><td>Signature</td><td class='num'>30</td></tr>
+<tr><td class='num'>10</td><td class='acct-name' title='Federal Home Loan Bank of Chicago'>Federal Home Loan Bank of Chicago</td><td>Premier</td><td class='num'>29</td></tr>
+</tbody></table></div>
+<div class='card ou-card'>
+<div class='ou-title'>SASIA</div>
+<table><thead><tr><th class='num'>#</th><th>Account</th><th>Entitlement</th><th class='num'>Cases</th></tr></thead><tbody>
+<tr><td class='num'>1</td><td class='acct-name' title='Bharti Airtel Limited'>Bharti Airtel Limited</td><td>Signature</td><td class='num'>134</td></tr>
+<tr><td class='num'>2</td><td class='acct-name' title='IDFC FIRST Bank Limited (Asset I)'>IDFC FIRST Bank Limited (Asset I)</td><td>Premier</td><td class='num'>111</td></tr>
+<tr><td class='num'>3</td><td class='acct-name' title='Genpact India Private Limited'>Genpact India Private Limited</td><td>Signature</td><td class='num'>110</td></tr>
+<tr><td class='num'>4</td><td class='acct-name' title='SBICAP Securities Ltd'>SBICAP Securities Ltd</td><td>Premier</td><td class='num'>103</td></tr>
+<tr><td class='num'>5</td><td class='acct-name' title='GODREJ AND BOYCE MANUFACTURING COMPANY LIMITED'>GODREJ AND BOYCE MANUFACTURING COMPANY LIMITED</td><td>Premier</td><td class='num'>101</td></tr>
+<tr><td class='num'>6</td><td class='acct-name' title='HDFC Bank Limited.'>HDFC Bank Limited.</td><td>Signature</td><td class='num'>97</td></tr>
+<tr><td class='num'>7</td><td class='acct-name' title='Narayana Hrudayalaya Limited'>Narayana Hrudayalaya Limited</td><td>Premier</td><td class='num'>96</td></tr>
+<tr><td class='num'>8</td><td class='acct-name' title='Walker Chandiok & Co. LLP'>Walker Chandiok & Co. LLP</td><td>Premier</td><td class='num'>89</td></tr>
+<tr><td class='num'>9</td><td class='acct-name' title='KOTAK MAHINDRA TRUSTEESHIP SERVICES LIMITED'>KOTAK MAHINDRA TRUSTEESHIP SERVICES LIMITED</td><td>Premier</td><td class='num'>86</td></tr>
+<tr><td class='num'>10</td><td class='acct-name' title='Delhivery Limited'>Delhivery Limited</td><td>Premier</td><td class='num'>83</td></tr>
+</tbody></table></div>
+<div class='card ou-card'>
+<div class='ou-title'>SMB</div>
+<table><thead><tr><th class='num'>#</th><th>Account</th><th>Entitlement</th><th class='num'>Cases</th></tr></thead><tbody>
+<tr><td class='num'>1</td><td class='acct-name' title='Cloud Hop Kenya'>Cloud Hop Kenya</td><td>Standard</td><td class='num'>129</td></tr>
+<tr><td class='num'>2</td><td class='acct-name' title='KIBO Commerce'>KIBO Commerce</td><td>Premier</td><td class='num'>116</td></tr>
+<tr><td class='num'>3</td><td class='acct-name' title='Quip - Help and Training - DO NOT TOUCH'>Quip - Help and Training - DO NOT TOUCH</td><td>Standard</td><td class='num'>91</td></tr>
+<tr><td class='num'>4</td><td class='acct-name' title='HH Insurance Group LLC 2nd org'>HH Insurance Group LLC 2nd org</td><td>Premier</td><td class='num'>54</td></tr>
+<tr><td class='num'>5</td><td class='acct-name' title='Oliver's Travels'>Oliver's Travels</td><td>Premier</td><td class='num'>50</td></tr>
+<tr><td class='num'>6</td><td class='acct-name' title='Barrister Executive Suites, Inc.'>Barrister Executive Suites, Inc.</td><td>Standard</td><td class='num'>47</td></tr>
+<tr><td class='num'>7</td><td class='acct-name' title='Sunny Benefits, Inc.'>Sunny Benefits, Inc.</td><td>Premier</td><td class='num'>41</td></tr>
+<tr><td class='num'>8</td><td class='acct-name' title='Buildout'>Buildout</td><td>Standard</td><td class='num'>33</td></tr>
+<tr><td class='num'>9</td><td class='acct-name' title='NanaWall Systems, Inc'>NanaWall Systems, Inc</td><td>Premier</td><td class='num'>32</td></tr>
+</tbody></table></div>
+<div class='card ou-card'>
+<div class='ou-title'>UKI</div>
+<table><thead><tr><th class='num'>#</th><th>Account</th><th>Entitlement</th><th class='num'>Cases</th></tr></thead><tbody>
+<tr><td class='num'>1</td><td class='acct-name' title='FEfundinfo (Main Org)'>FEfundinfo (Main Org)</td><td>Premier</td><td class='num'>221</td></tr>
+<tr><td class='num'>2</td><td class='acct-name' title='Genpact (UK) Limited'>Genpact (UK) Limited</td><td>Standard</td><td class='num'>106</td></tr>
+<tr><td class='num'>3</td><td class='acct-name' title='bp International Ltd'>bp International Ltd</td><td>Signature</td><td class='num'>97</td></tr>
+<tr><td class='num'>4</td><td class='acct-name' title='BELRON INTERNATIONAL LTD'>BELRON INTERNATIONAL LTD</td><td>Premier</td><td class='num'>86</td></tr>
+<tr><td class='num'>5</td><td class='acct-name' title='Asda Stores Limited'>Asda Stores Limited</td><td>Signature</td><td class='num'>64</td></tr>
+<tr><td class='num'>6</td><td class='acct-name' title='British American Shared Services (GSD) Limited*'>British American Shared Services (GSD) Limited*</td><td>Signature</td><td class='num'>54</td></tr>
+<tr><td class='num'>7</td><td class='acct-name' title='British American Shared Services (GSD) Limited'>British American Shared Services (GSD) Limited</td><td>Signature</td><td class='num'>49</td></tr>
+<tr><td class='num'>8</td><td class='acct-name' title='Barclays Execution Services Limited'>Barclays Execution Services Limited</td><td>Signature</td><td class='num'>47</td></tr>
+<tr><td class='num'>9</td><td class='acct-name' title='GLS Global Services GmbH'>GLS Global Services GmbH</td><td>Premier</td><td class='num'>44</td></tr>
+<tr><td class='num'>10</td><td class='acct-name' title='Jaguar Land Rover Limited'>Jaguar Land Rover Limited</td><td>Signature</td><td class='num'>44</td></tr>
+</tbody></table></div>
+</div>
+<h2 class='ou-section' id='sec-sev1-ou-sig'>Top 10 Sev-1 Accounts — Signature Accounts</h2>
+<div class='grid-ou'>
+<div class='card ou-card'>
+<div class='ou-title'>AMER ACC CBS</div>
+<table><thead><tr><th class='num'>#</th><th>Account</th><th class='num'>Cases</th></tr></thead><tbody>
+<tr><td class='num'>1</td><td class='acct-name' title='CBRE Inc. (CIQ - Corporate Account - OrgID 00Di0000000amTo)'>CBRE Inc. (CIQ - Corporate Account - OrgID 00Di0000000amTo)</td><td class='num'>25</td></tr>
+<tr><td class='num'>2</td><td class='acct-name' title='Deloitte Touche Tohmatsu Services, LLC'>Deloitte Touche Tohmatsu Services, LLC</td><td class='num'>21</td></tr>
+<tr><td class='num'>3</td><td class='acct-name' title='Group M Worldwide LLC'>Group M Worldwide LLC</td><td class='num'>16</td></tr>
+<tr><td class='num'>4</td><td class='acct-name' title='Avis Budget Car Rental, LLC'>Avis Budget Car Rental, LLC</td><td class='num'>11</td></tr>
+<tr><td class='num'>5</td><td class='acct-name' title='The Hertz Corporation'>The Hertz Corporation</td><td class='num'>8</td></tr>
+<tr><td class='num'>6</td><td class='acct-name' title='SparkFoundry'>SparkFoundry</td><td class='num'>6</td></tr>
+<tr><td class='num'>7</td><td class='acct-name' title='2U LLC'>2U LLC</td><td class='num'>5</td></tr>
+<tr><td class='num'>8</td><td class='acct-name' title='Allegis Group, Inc.**'>Allegis Group, Inc.**</td><td class='num'>4</td></tr>
+<tr><td class='num'>9</td><td class='acct-name' title='Moody's Corporation'>Moody's Corporation</td><td class='num'>4</td></tr>
+<tr><td class='num'>10</td><td class='acct-name' title='Public Storage'>Public Storage</td><td class='num'>4</td></tr>
+</tbody></table></div>
+<div class='card ou-card'>
+<div class='ou-title'>AMER ACC TMT</div>
+<table><thead><tr><th class='num'>#</th><th>Account</th><th class='num'>Cases</th></tr></thead><tbody>
+<tr><td class='num'>1</td><td class='acct-name' title='Omnicom Media Group Holdings Inc.'>Omnicom Media Group Holdings Inc.</td><td class='num'>97</td></tr>
+<tr><td class='num'>2</td><td class='acct-name' title='Amazon.com Services LLC'>Amazon.com Services LLC</td><td class='num'>25</td></tr>
+<tr><td class='num'>3</td><td class='acct-name' title='Verizon Sourcing LLC'>Verizon Sourcing LLC</td><td class='num'>20</td></tr>
+<tr><td class='num'>4</td><td class='acct-name' title='Zoom Video Communications, Inc'>Zoom Video Communications, Inc</td><td class='num'>19</td></tr>
+<tr><td class='num'>5</td><td class='acct-name' title='Cisco Systems Inc.'>Cisco Systems Inc.</td><td class='num'>17</td></tr>
+<tr><td class='num'>6</td><td class='acct-name' title='Sony Music Entertainment'>Sony Music Entertainment</td><td class='num'>16</td></tr>
+<tr><td class='num'>7</td><td class='acct-name' title='Comcast Cable Communications Management LLC'>Comcast Cable Communications Management LLC</td><td class='num'>10</td></tr>
+<tr><td class='num'>8</td><td class='acct-name' title='Disney Entertainment & Sports LLC'>Disney Entertainment & Sports LLC</td><td class='num'>10</td></tr>
+<tr><td class='num'>9</td><td class='acct-name' title='Medidata Solutions, Inc.'>Medidata Solutions, Inc.</td><td class='num'>10</td></tr>
+<tr><td class='num'>10</td><td class='acct-name' title='Oath Holdings Inc.'>Oath Holdings Inc.</td><td class='num'>9</td></tr>
+</tbody></table></div>
+<div class='card ou-card'>
+<div class='ou-title'>AMER PACE</div>
+<table><thead><tr><th class='num'>#</th><th>Account</th><th class='num'>Cases</th></tr></thead><tbody>
+<tr><td class='num'>1</td><td class='acct-name' title='PepsiCo, Inc.'>PepsiCo, Inc.</td><td class='num'>29</td></tr>
+<tr><td class='num'>2</td><td class='acct-name' title='Walmart, Inc.'>Walmart, Inc.</td><td class='num'>13</td></tr>
+<tr><td class='num'>3</td><td class='acct-name' title='The Procter & Gamble Company'>The Procter & Gamble Company</td><td class='num'>13</td></tr>
+<tr><td class='num'>4</td><td class='acct-name' title='Sheetz, Inc.'>Sheetz, Inc.</td><td class='num'>9</td></tr>
+<tr><td class='num'>5</td><td class='acct-name' title='Tesla Inc.**'>Tesla Inc.**</td><td class='num'>8</td></tr>
+<tr><td class='num'>6</td><td class='acct-name' title='CAVA'>CAVA</td><td class='num'>7</td></tr>
+<tr><td class='num'>7</td><td class='acct-name' title='Chewy, Inc.'>Chewy, Inc.</td><td class='num'>7</td></tr>
+<tr><td class='num'>8</td><td class='acct-name' title='H-E-B, LP'>H-E-B, LP</td><td class='num'>6</td></tr>
+<tr><td class='num'>9</td><td class='acct-name' title='Toyota Motor Credit Corporation'>Toyota Motor Credit Corporation</td><td class='num'>6</td></tr>
+<tr><td class='num'>10</td><td class='acct-name' title='Proximo Spirits, Inc.'>Proximo Spirits, Inc.</td><td class='num'>6</td></tr>
+</tbody></table></div>
+<div class='card ou-card'>
+<div class='ou-title'>AMER REG</div>
+<table><thead><tr><th class='num'>#</th><th>Account</th><th class='num'>Cases</th></tr></thead><tbody>
+<tr><td class='num'>1</td><td class='acct-name' title='Visa U.S.A. Inc.'>Visa U.S.A. Inc.</td><td class='num'>67</td></tr>
+<tr><td class='num'>2</td><td class='acct-name' title='Mastercard Technologies, LLC'>Mastercard Technologies, LLC</td><td class='num'>33</td></tr>
+<tr><td class='num'>3</td><td class='acct-name' title='Kaiser Foundation Hospitals'>Kaiser Foundation Hospitals</td><td class='num'>28</td></tr>
+<tr><td class='num'>4</td><td class='acct-name' title='Shelter Mutual Insurance Company'>Shelter Mutual Insurance Company</td><td class='num'>25</td></tr>
+<tr><td class='num'>5</td><td class='acct-name' title='Claritev, Inc.'>Claritev, Inc.</td><td class='num'>20</td></tr>
+<tr><td class='num'>6</td><td class='acct-name' title='Pfizer - Tableau Account'>Pfizer - Tableau Account</td><td class='num'>18</td></tr>
+<tr><td class='num'>7</td><td class='acct-name' title='United HealthCare Services, Inc.'>United HealthCare Services, Inc.</td><td class='num'>17</td></tr>
+<tr><td class='num'>8</td><td class='acct-name' title='Regeneron Pharmaceuticals, Inc.'>Regeneron Pharmaceuticals, Inc.</td><td class='num'>14</td></tr>
+<tr><td class='num'>9</td><td class='acct-name' title='Alcon Vision LLC (Org ID: 00DG0000000gc7V)'>Alcon Vision LLC (Org ID: 00DG0000000gc7V)</td><td class='num'>13</td></tr>
+<tr><td class='num'>10</td><td class='acct-name' title='Bank of America, N.A.'>Bank of America, N.A.</td><td class='num'>13</td></tr>
+</tbody></table></div>
+<div class='card ou-card'>
+<div class='ou-title'>ANZ</div>
+<table><thead><tr><th class='num'>#</th><th>Account</th><th class='num'>Cases</th></tr></thead><tbody>
+<tr><td class='num'>1</td><td class='acct-name' title='Suncorp Corporate Services PTY LTD'>Suncorp Corporate Services PTY LTD</td><td class='num'>10</td></tr>
+<tr><td class='num'>2</td><td class='acct-name' title='Ticketek Pty Ltd'>Ticketek Pty Ltd</td><td class='num'>9</td></tr>
+<tr><td class='num'>3</td><td class='acct-name' title='Atlassian Pty Ltd.'>Atlassian Pty Ltd.</td><td class='num'>4</td></tr>
+<tr><td class='num'>4</td><td class='acct-name' title='EnergyAustralia Services Pty Ltd'>EnergyAustralia Services Pty Ltd</td><td class='num'>4</td></tr>
+<tr><td class='num'>5</td><td class='acct-name' title='Ched Services Pty Ltd'>Ched Services Pty Ltd</td><td class='num'>3</td></tr>
+<tr><td class='num'>6</td><td class='acct-name' title='Xero Limited'>Xero Limited</td><td class='num'>2</td></tr>
+<tr><td class='num'>7</td><td class='acct-name' title='MECCA Brands Pty Ltd'>MECCA Brands Pty Ltd</td><td class='num'>2</td></tr>
+<tr><td class='num'>8</td><td class='acct-name' title='Woolworths Group Limited'>Woolworths Group Limited</td><td class='num'>2</td></tr>
+<tr><td class='num'>9</td><td class='acct-name' title='Veolia Environmental Services (Australia) Pty Ltd'>Veolia Environmental Services (Australia) Pty Ltd</td><td class='num'>1</td></tr>
+<tr><td class='num'>10</td><td class='acct-name' title='Origin Energy Services Ltd'>Origin Energy Services Ltd</td><td class='num'>1</td></tr>
+</tbody></table></div>
+<div class='card ou-card'>
+<div class='ou-title'>EMEA CENTRAL</div>
+<table><thead><tr><th class='num'>#</th><th>Account</th><th class='num'>Cases</th></tr></thead><tbody>
+<tr><td class='num'>1</td><td class='acct-name' title='Siemens AG'>Siemens AG</td><td class='num'>25</td></tr>
+<tr><td class='num'>2</td><td class='acct-name' title='Bayerische Motoren Werke AG'>Bayerische Motoren Werke AG</td><td class='num'>14</td></tr>
+<tr><td class='num'>3</td><td class='acct-name' title='Siemens Energy Global GmbH & Co. KG'>Siemens Energy Global GmbH & Co. KG</td><td class='num'>5</td></tr>
+<tr><td class='num'>4</td><td class='acct-name' title='TUI InfoTec GmbH (Tableau Org)'>TUI InfoTec GmbH (Tableau Org)</td><td class='num'>3</td></tr>
+<tr><td class='num'>5</td><td class='acct-name' title='Kühne + Nagel (AG & Co.) KG'>Kühne + Nagel (AG & Co.) KG</td><td class='num'>3</td></tr>
+<tr><td class='num'>6</td><td class='acct-name' title='KARL STORZ SE & Co. KG'>KARL STORZ SE & Co. KG</td><td class='num'>3</td></tr>
+<tr><td class='num'>7</td><td class='acct-name' title='Merck KGaA'>Merck KGaA</td><td class='num'>2</td></tr>
+<tr><td class='num'>8</td><td class='acct-name' title='T-Mobile Austria GmbH'>T-Mobile Austria GmbH</td><td class='num'>1</td></tr>
+<tr><td class='num'>9</td><td class='acct-name' title='DB Systel GmbH (Tableau Org)'>DB Systel GmbH (Tableau Org)</td><td class='num'>1</td></tr>
+<tr><td class='num'>10</td><td class='acct-name' title='Volkswagen Software Asset Management GmbH'>Volkswagen Software Asset Management GmbH</td><td class='num'>1</td></tr>
+</tbody></table></div>
+<div class='card ou-card'>
+<div class='ou-title'>EMEA FRANCE</div>
+<table><thead><tr><th class='num'>#</th><th>Account</th><th class='num'>Cases</th></tr></thead><tbody>
+<tr><td class='num'>1</td><td class='acct-name' title='Schneider Electric Industries SAS.'>Schneider Electric Industries SAS.</td><td class='num'>4</td></tr>
+<tr><td class='num'>2</td><td class='acct-name' title='GIE COVEA AGORA'>GIE COVEA AGORA</td><td class='num'>4</td></tr>
+<tr><td class='num'>3</td><td class='acct-name' title='BIOMERIEUX SA'>BIOMERIEUX SA</td><td class='num'>2</td></tr>
+<tr><td class='num'>4</td><td class='acct-name' title='Pathé Cinemas Services'>Pathé Cinemas Services</td><td class='num'>2</td></tr>
+<tr><td class='num'>5</td><td class='acct-name' title='LA POSTE - Paris'>LA POSTE - Paris</td><td class='num'>2</td></tr>
+<tr><td class='num'>6</td><td class='acct-name' title='PIERRE FABRE S.A.'>PIERRE FABRE S.A.</td><td class='num'>1</td></tr>
+<tr><td class='num'>7</td><td class='acct-name' title='BNP PARIBAS SA'>BNP PARIBAS SA</td><td class='num'>1</td></tr>
+<tr><td class='num'>8</td><td class='acct-name' title='Bouygues Telecom'>Bouygues Telecom</td><td class='num'>1</td></tr>
+</tbody></table></div>
+<div class='card ou-card'>
+<div class='ou-title'>EMEA NORTH</div>
+<table><thead><tr><th class='num'>#</th><th>Account</th><th class='num'>Cases</th></tr></thead><tbody>
+<tr><td class='num'>1</td><td class='acct-name' title='F. Hoffmann-La Roche AG.'>F. Hoffmann-La Roche AG.</td><td class='num'>4</td></tr>
+<tr><td class='num'>2</td><td class='acct-name' title='Hutchison Whampoa 3G Ip SARL'>Hutchison Whampoa 3G Ip SARL</td><td class='num'>4</td></tr>
+<tr><td class='num'>3</td><td class='acct-name' title='PVH Europe BV'>PVH Europe BV</td><td class='num'>3</td></tr>
+<tr><td class='num'>4</td><td class='acct-name' title='Skandinaviska Enskilda Banken (publ)'>Skandinaviska Enskilda Banken (publ)</td><td class='num'>2</td></tr>
+<tr><td class='num'>5</td><td class='acct-name' title='AAK AB'>AAK AB</td><td class='num'>1</td></tr>
+<tr><td class='num'>6</td><td class='acct-name' title='Fremtind Forsikring AS'>Fremtind Forsikring AS</td><td class='num'>1</td></tr>
+<tr><td class='num'>7</td><td class='acct-name' title='Novo Nordisk A/S'>Novo Nordisk A/S</td><td class='num'>1</td></tr>
+<tr><td class='num'>8</td><td class='acct-name' title='Nestlé Operational Services Worldwide (NOSW) S.A.'>Nestlé Operational Services Worldwide (NOSW) S.A.</td><td class='num'>1</td></tr>
+</tbody></table></div>
+<div class='card ou-card'>
+<div class='ou-title'>EMEA SOUTH</div>
+<table><thead><tr><th class='num'>#</th><th>Account</th><th class='num'>Cases</th></tr></thead><tbody>
+<tr><td class='num'>1</td><td class='acct-name' title='United Bank Limited Pakistan'>United Bank Limited Pakistan</td><td class='num'>10</td></tr>
+<tr><td class='num'>2</td><td class='acct-name' title='Ministry of Finance - Saudi Arabia'>Ministry of Finance - Saudi Arabia</td><td class='num'>9</td></tr>
+<tr><td class='num'>3</td><td class='acct-name' title='Qatar Airways Group Q.C.S.C'>Qatar Airways Group Q.C.S.C</td><td class='num'>8</td></tr>
+<tr><td class='num'>4</td><td class='acct-name' title='Saudi Telecom Company (STC)'>Saudi Telecom Company (STC)</td><td class='num'>7</td></tr>
+<tr><td class='num'>5</td><td class='acct-name' title='Al Futtaim Private Company LLC'>Al Futtaim Private Company LLC</td><td class='num'>7</td></tr>
+<tr><td class='num'>6</td><td class='acct-name' title='GENERAL ORGANIZATION FOR SOCIAL INSURANCE (GOSI)'>GENERAL ORGANIZATION FOR SOCIAL INSURANCE (GOSI)</td><td class='num'>5</td></tr>
+<tr><td class='num'>7</td><td class='acct-name' title='Actimize Ltd'>Actimize Ltd</td><td class='num'>5</td></tr>
+<tr><td class='num'>8</td><td class='acct-name' title='El Corte Inglés SA'>El Corte Inglés SA</td><td class='num'>4</td></tr>
+<tr><td class='num'>9</td><td class='acct-name' title='Tasheer Saudi Company for Visa and Travel Solutions'>Tasheer Saudi Company for Visa and Travel Solutions</td><td class='num'>3</td></tr>
+<tr><td class='num'>10</td><td class='acct-name' title='Engineering Ingegneria Informatica S.p.A.'>Engineering Ingegneria Informatica S.p.A.</td><td class='num'>2</td></tr>
+</tbody></table></div>
+<div class='card ou-card'>
+<div class='ou-title'>GCR</div>
+<table><thead><tr><th class='num'>#</th><th>Account</th><th class='num'>Cases</th></tr></thead><tbody>
+<tr><td class='num'>1</td><td class='acct-name' title='Orient Overseas Container Line Limited'>Orient Overseas Container Line Limited</td><td class='num'>1</td></tr>
+</tbody></table></div>
+<div class='card ou-card'>
+<div class='ou-title'>JP</div>
+<table><thead><tr><th class='num'>#</th><th>Account</th><th class='num'>Cases</th></tr></thead><tbody>
+<tr><td class='num'>1</td><td class='acct-name' title='Chuden CTI Co.,Ltd.'>Chuden CTI Co.,Ltd.</td><td class='num'>9</td></tr>
+<tr><td class='num'>2</td><td class='acct-name' title='MUFG Bank, Ltd.'>MUFG Bank, Ltd.</td><td class='num'>4</td></tr>
+<tr><td class='num'>3</td><td class='acct-name' title='Sumitomo Rubber Industries, Ltd.'>Sumitomo Rubber Industries, Ltd.</td><td class='num'>4</td></tr>
+<tr><td class='num'>4</td><td class='acct-name' title='CYBERAGENT, INC.'>CYBERAGENT, INC.</td><td class='num'>2</td></tr>
+<tr><td class='num'>5</td><td class='acct-name' title='Sumitomo Bakelite Co., Ltd.'>Sumitomo Bakelite Co., Ltd.</td><td class='num'>2</td></tr>
+<tr><td class='num'>6</td><td class='acct-name' title='AOZORA BANK,LTD.'>AOZORA BANK,LTD.</td><td class='num'>2</td></tr>
+<tr><td class='num'>7</td><td class='acct-name' title='MIZUHO BANK, LTD.'>MIZUHO BANK, LTD.</td><td class='num'>2</td></tr>
+<tr><td class='num'>8</td><td class='acct-name' title='AEON Bank, Ltd.'>AEON Bank, Ltd.</td><td class='num'>2</td></tr>
+<tr><td class='num'>9</td><td class='acct-name' title='SUBARU CORPORATION'>SUBARU CORPORATION</td><td class='num'>2</td></tr>
+<tr><td class='num'>10</td><td class='acct-name' title='Rapidus Corporation'>Rapidus Corporation</td><td class='num'>1</td></tr>
+</tbody></table></div>
+<div class='card ou-card'>
+<div class='ou-title'>LATAM</div>
+<table><thead><tr><th class='num'>#</th><th>Account</th><th class='num'>Cases</th></tr></thead><tbody>
+<tr><td class='num'>1</td><td class='acct-name' title='Nueva Elektra del Milenio S.A de CV - TAX ID: ECE9610253TA'>Nueva Elektra del Milenio S.A de CV - TAX ID: ECE9610253TA</td><td class='num'>5</td></tr>
+<tr><td class='num'>2</td><td class='acct-name' title='MercadoLibre SRL'>MercadoLibre SRL</td><td class='num'>4</td></tr>
+<tr><td class='num'>3</td><td class='acct-name' title='TELMEX'>TELMEX</td><td class='num'>4</td></tr>
+<tr><td class='num'>4</td><td class='acct-name' title='Banco Santander (Brasil) S.A.'>Banco Santander (Brasil) S.A.</td><td class='num'>3</td></tr>
+<tr><td class='num'>5</td><td class='acct-name' title='Mercado Libre SELA TAB'>Mercado Libre SELA TAB</td><td class='num'>2</td></tr>
+<tr><td class='num'>6</td><td class='acct-name' title='Comunicación Celular, S.A'>Comunicación Celular, S.A</td><td class='num'>2</td></tr>
+<tr><td class='num'>7</td><td class='acct-name' title='Vibra Energia S/A'>Vibra Energia S/A</td><td class='num'>1</td></tr>
+<tr><td class='num'>8</td><td class='acct-name' title='Starcom MediaVest Group Latin America Headquarters'>Starcom MediaVest Group Latin America Headquarters</td><td class='num'>1</td></tr>
+<tr><td class='num'>9</td><td class='acct-name' title='BANCO INTER S.A.'>BANCO INTER S.A.</td><td class='num'>1</td></tr>
+</tbody></table></div>
+<div class='card ou-card'>
+<div class='ou-title'>PS</div>
+<table><thead><tr><th class='num'>#</th><th>Account</th><th class='num'>Cases</th></tr></thead><tbody>
+<tr><td class='num'>1</td><td class='acct-name' title='City of Toronto (Tableau)'>City of Toronto (Tableau)</td><td class='num'>22</td></tr>
+<tr><td class='num'>2</td><td class='acct-name' title='State of North Carolina Department of Information Technology Tableau'>State of North Carolina Department of Information Technology Tableau</td><td class='num'>15</td></tr>
+<tr><td class='num'>3</td><td class='acct-name' title='Massachusetts Executive Office of Health and Human Services'>Massachusetts Executive Office of Health and Human Services</td><td class='num'>13</td></tr>
+<tr><td class='num'>4</td><td class='acct-name' title='US Citizenship and Immigration Services'>US Citizenship and Immigration Services</td><td class='num'>11</td></tr>
+<tr><td class='num'>5</td><td class='acct-name' title='Colorado Governor's Office of  Information Technology'>Colorado Governor's Office of  Information Technology</td><td class='num'>11</td></tr>
+<tr><td class='num'>6</td><td class='acct-name' title='Canada Pension Plan Investment Board'>Canada Pension Plan Investment Board</td><td class='num'>9</td></tr>
+<tr><td class='num'>7</td><td class='acct-name' title='US Govt- Department of Commerce'>US Govt- Department of Commerce</td><td class='num'>9</td></tr>
+<tr><td class='num'>8</td><td class='acct-name' title='Michigan DHHS: STI/HIV Operations and Resource System (SHOARS - Org4)'>Michigan DHHS: STI/HIV Operations and Resource System (SHOARS - Org4)</td><td class='num'>8</td></tr>
+<tr><td class='num'>9</td><td class='acct-name' title='Federal Home Loan Bank of Chicago'>Federal Home Loan Bank of Chicago</td><td class='num'>8</td></tr>
+<tr><td class='num'>10</td><td class='acct-name' title='UN World Food Programme'>UN World Food Programme</td><td class='num'>7</td></tr>
+</tbody></table></div>
+<div class='card ou-card'>
+<div class='ou-title'>SASIA</div>
+<table><thead><tr><th class='num'>#</th><th>Account</th><th class='num'>Cases</th></tr></thead><tbody>
+<tr><td class='num'>1</td><td class='acct-name' title='Standard Chartered Bank'>Standard Chartered Bank</td><td class='num'>44</td></tr>
+<tr><td class='num'>2</td><td class='acct-name' title='GIC Private Limited'>GIC Private Limited</td><td class='num'>18</td></tr>
+<tr><td class='num'>3</td><td class='acct-name' title='Tata Steel Limited'>Tata Steel Limited</td><td class='num'>14</td></tr>
+<tr><td class='num'>4</td><td class='acct-name' title='Celcom Networks Sdn Bhd'>Celcom Networks Sdn Bhd</td><td class='num'>13</td></tr>
+<tr><td class='num'>5</td><td class='acct-name' title='THE GREAT EASTERN LIFE ASSURANCE COMPANY LIMITED'>THE GREAT EASTERN LIFE ASSURANCE COMPANY LIMITED</td><td class='num'>13</td></tr>
+<tr><td class='num'>6</td><td class='acct-name' title='DBS BANK LTD (Main)'>DBS BANK LTD (Main)</td><td class='num'>13</td></tr>
+<tr><td class='num'>7</td><td class='acct-name' title='IDFC FIRST Bank Limited (Asset I)'>IDFC FIRST Bank Limited (Asset I)</td><td class='num'>13</td></tr>
+<tr><td class='num'>8</td><td class='acct-name' title='Jio Platforms Limited'>Jio Platforms Limited</td><td class='num'>12</td></tr>
+<tr><td class='num'>9</td><td class='acct-name' title='Ola Electric Technologies Private  Limited'>Ola Electric Technologies Private  Limited</td><td class='num'>9</td></tr>
+<tr><td class='num'>10</td><td class='acct-name' title='Singapore Airlines Ltd'>Singapore Airlines Ltd</td><td class='num'>8</td></tr>
+</tbody></table></div>
+<div class='card ou-card'>
+<div class='ou-title'>SMB</div>
+<table><thead><tr><th class='num'>#</th><th>Account</th><th class='num'>Cases</th></tr></thead><tbody>
+<tr><td class='num'>1</td><td class='acct-name' title='ABOUT Healthcare, Inc. f/k/a Central Logic'>ABOUT Healthcare, Inc. f/k/a Central Logic</td><td class='num'>4</td></tr>
+<tr><td class='num'>2</td><td class='acct-name' title='Gunderson Dettmer'>Gunderson Dettmer</td><td class='num'>1</td></tr>
+<tr><td class='num'>3</td><td class='acct-name' title='Lextegrity LLC'>Lextegrity LLC</td><td class='num'>1</td></tr>
+<tr><td class='num'>4</td><td class='acct-name' title='Kynetec Uk Limited'>Kynetec Uk Limited</td><td class='num'>1</td></tr>
+</tbody></table></div>
+<div class='card ou-card'>
+<div class='ou-title'>UKI</div>
+<table><thead><tr><th class='num'>#</th><th>Account</th><th class='num'>Cases</th></tr></thead><tbody>
+<tr><td class='num'>1</td><td class='acct-name' title='HSBC Global Services (UK) Ltd.'>HSBC Global Services (UK) Ltd.</td><td class='num'>14</td></tr>
+<tr><td class='num'>2</td><td class='acct-name' title='BSPE'>BSPE</td><td class='num'>11</td></tr>
+<tr><td class='num'>3</td><td class='acct-name' title='Virgin Media Limited'>Virgin Media Limited</td><td class='num'>9</td></tr>
+<tr><td class='num'>4</td><td class='acct-name' title='United Utilities WATER Limited'>United Utilities WATER Limited</td><td class='num'>3</td></tr>
+<tr><td class='num'>5</td><td class='acct-name' title='AWIN Ltd.'>AWIN Ltd.</td><td class='num'>3</td></tr>
+<tr><td class='num'>6</td><td class='acct-name' title='Elsevier Limited'>Elsevier Limited</td><td class='num'>2</td></tr>
+<tr><td class='num'>7</td><td class='acct-name' title='UBS BUSINESS SOLUTIONS AG, UK BRANCH'>UBS BUSINESS SOLUTIONS AG, UK BRANCH</td><td class='num'>2</td></tr>
+<tr><td class='num'>8</td><td class='acct-name' title='Aspen (Uk) Holdings Limited'>Aspen (Uk) Holdings Limited</td><td class='num'>2</td></tr>
+<tr><td class='num'>9</td><td class='acct-name' title='Aptiv PLC - Dublin'>Aptiv PLC - Dublin</td><td class='num'>2</td></tr>
+<tr><td class='num'>10</td><td class='acct-name' title='Sky UK Limited'>Sky UK Limited</td><td class='num'>2</td></tr>
+</tbody></table></div>
+</div>
+
+
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     UNIFIED FOOTER
+══════════════════════════════════════════════════ -->
+<div class="exec-footer">
+  <strong>CSG Executive Report</strong> &nbsp;·&nbsp;
+  Source: SSE_DM_CSG_RPT_PRD.BI_DE.FACT_CASE_SOT &amp; CSG_ACCOUNT_BASE &nbsp;·&nbsp;
+  Highest Case Severity = Level 1 – Critical &nbsp;·&nbsp;
+  Slack excluded &nbsp;·&nbsp;
+  "Others" OU in Grand Total only &nbsp;·&nbsp;
+  Generated: May 11, 2026
+</div>
+
+<script>
+var BLUE='#0176D3',ORG='#FE9339',DARK='#032D60';
+var base={plot_bgcolor:'white',paper_bgcolor:'white',font:{color:'#2a3f5f'}};
+
+// ── ch_ou_pct100: 100% stacked ────────────────────────────────────────────────
+Plotly.newPlot('ch_ou_pct100',[
+  {type:'bar',orientation:'h',name:'Sev-1 Creator %',
+    x:[6.4, 18.6, 26.3, 3.5, 25.8, 14.0, 26.9, 16.3, 16.8, 24.3, 23.7, 26.6, 18.4, 23.3, 5.4, 5.9],y:["GCR", "EMEA CENTRAL", "EMEA FRANCE", "JP", "EMEA NORTH", "ANZ", "UKI", "LATAM", "AMER ACC CBS", "EMEA SOUTH", "AMER PACE", "AMER ACC TMT", "SASIA", "AMER REG", "PS", "SMB"],marker:{color:ORG},
+    text:["6.4%", "18.6%", "26.3%", "3.5%", "25.8%", "14.0%", "26.9%", "16.3%", "16.8%", "24.3%", "23.7%", "26.6%", "18.4%", "23.3%", "5.4%", "5.9%"],textposition:'inside',
+    hovertemplate:'<b>%{y}</b><br>Sev1: %{x}%<extra></extra>'},
+  {type:'bar',orientation:'h',name:'Non Sev-1 %',
+    x:[93.6, 81.4, 73.7, 96.5, 74.2, 86.0, 73.1, 83.7, 83.2, 75.7, 76.3, 73.4, 81.6, 76.7, 94.6, 94.1],y:["GCR", "EMEA CENTRAL", "EMEA FRANCE", "JP", "EMEA NORTH", "ANZ", "UKI", "LATAM", "AMER ACC CBS", "EMEA SOUTH", "AMER PACE", "AMER ACC TMT", "SASIA", "AMER REG", "PS", "SMB"],marker:{color:BLUE},
+    text:["93.6%", "81.4%", "73.7%", "96.5%", "74.2%", "86.0%", "73.1%", "83.7%", "83.2%", "75.7%", "76.3%", "73.4%", "81.6%", "76.7%", "94.6%", "94.1%"],textposition:'inside',
+    hovertemplate:'<b>%{y}</b><br>Non-Sev1: %{x}%<extra></extra>'}
+],Object.assign({},base,{
+  barmode:'stack',height:580,
+  title:{text:'% of Accounts Creating Sev-1 by OU<br><sub>100% = total account base</sub>',font:{size:13,color:DARK},x:0.5,xanchor:'center'},
+  xaxis:{title:'% of Accounts',showgrid:true,gridcolor:'#EEE',range:[0,100]},
+  legend:{orientation:'h',y:-0.15,x:0.5,xanchor:'center',yanchor:'top'},
+  margin:{l:150,r:30,t:110,b:70}
+}),{displayModeBar:false,responsive:true});
+
+// ── ch_ou_vol ─────────────────────────────────────────────────────────────────
+Plotly.newPlot('ch_ou_vol',[
+  {type:'bar',orientation:'h',cliponaxis:false,
+    x:[518, 1878, 2888, 3431, 4251, 4538, 5206, 5783, 6340, 7561, 10176, 10647, 12127, 14299, 15505, 16467],
+    y:["GCR", "JP", "EMEA CENTRAL", "EMEA FRANCE", "ANZ", "EMEA NORTH", "LATAM", "AMER ACC CBS", "UKI", "EMEA SOUTH", "PS", "AMER PACE", "AMER ACC TMT", "SASIA", "SMB", "AMER REG"],
+    marker:{color:BLUE},
+    text:["518", "1,878", "2,888", "3,431", "4,251", "4,538", "5,206", "5,783", "6,340", "7,561", "10,176", "10,647", "12,127", "14,299", "15,505", "16,467"],textposition:'outside',
+    hovertemplate:'<b>%{y}</b><br>Cases: %{x:,}<extra></extra>'}
+],Object.assign({},base,{
+  height:580,
+  title:{text:'Sev-1 Case Volume by OU<br><sub>last 12 months</sub>',font:{size:13,color:DARK},x:0.5,xanchor:'center'},
+  xaxis:{title:'# of Sev-1 Cases',showgrid:true,gridcolor:'#EEE',range:[0,20090]},
+  margin:{l:150,r:80,t:110,b:60}
+}),{displayModeBar:false,responsive:true});
+
+// ── ch_ou_cpa ─────────────────────────────────────────────────────────────────
+var cpaSorted = [[2.7, "GCR", "#0176D3"], [3.9, "EMEA CENTRAL", "#FE9339"], [4.4, "EMEA FRANCE", "#FE9339"], [2.0, "JP", "#0176D3"], [4.5, "EMEA NORTH", "#FE9339"], [3.7, "ANZ", "#0176D3"], [5.3, "UKI", "#FE9339"], [4.2, "LATAM", "#FE9339"], [4.5, "AMER ACC CBS", "#FE9339"], [4.5, "EMEA SOUTH", "#FE9339"], [5.6, "AMER PACE", "#FE9339"], [6.2, "AMER ACC TMT", "#FE9339"], [6.4, "SASIA", "#FE9339"], [4.8, "AMER REG", "#FE9339"], [2.5, "PS", "#0176D3"], [2.0, "SMB", "#0176D3"]];
+cpaSorted.sort(function(a,b){return a[0]-b[0];});
+Plotly.newPlot('ch_ou_cpa',[
+  {type:'bar',orientation:'h',cliponaxis:false,
+    x:cpaSorted.map(function(d){return d[0];}),
+    y:cpaSorted.map(function(d){return d[1];}),
+    marker:{color:cpaSorted.map(function(d){return d[2];})},
+    text:cpaSorted.map(function(d){return d[0].toString();}),textposition:'outside',
+    hovertemplate:'<b>%{y}</b><br>%{x} cases/creator<extra></extra>'}
+],Object.assign({},base,{
+  height:580,
+  shapes:[{type:'line',x0:3.9,x1:3.9,y0:0,y1:1,xref:'x',yref:'y domain',line:{color:DARK,dash:'dash'}}],
+  annotations:[{showarrow:false,text:'Overall avg: 3.9',x:3.9,xanchor:'center',xref:'x',y:1,yanchor:'bottom',yref:'y domain'}],
+  title:{text:'Sev1 Cases per Case Creating Accts by OU<br><sub>orange = above avg (3.9)</sub>',font:{size:13,color:DARK},x:0.5,xanchor:'center'},
+  xaxis:{title:'Cases / Sev1 Creator',showgrid:true,gridcolor:'#EEE',range:[0,8.3]},
+  margin:{l:150,r:80,t:110,b:40}
+}),{displayModeBar:false,responsive:true});
+
+// ── ch_skew_all ───────────────────────────────────────────────────────────────
+Plotly.newPlot('ch_skew_all',[
+  {type:'bar',name:'# Accounts',xaxis:'x',yaxis:'y',
+    x:["1","2-3","4-5","6-10",">10"],y:[16534,8920,3096,2916,2666],marker:{color:BLUE},
+    text:["16,534<br>(48.4%)","8,920<br>(26.1%)","3,096<br>(9.1%)","2,916<br>(8.5%)","2,666<br>(7.8%)"],textposition:'outside',
+    hovertemplate:'Bucket: %{x}<br>Accounts: %{y:,}<extra></extra>'},
+  {type:'scatter',mode:'lines+markers+text',name:'# Cases',xaxis:'x',yaxis:'y2',
+    x:["1","2-3","4-5","6-10",">10"],y:[16534,20823,13672,21974,92842],
+    line:{color:ORG,width:3},marker:{size:10},
+    text:["16,534","20,823","13,672","21,974","92,842"],
+    textfont:{color:ORG,size:12},
+    textposition:["top center","top center","top center","bottom center","bottom center"]}
+],Object.assign({},base,{
+  height:480,
+  title:{text:'Sev-1 Case Distribution — All Sev1 Case Creators',font:{size:13,color:DARK},x:0.5,xanchor:'center'},
+  xaxis:{anchor:'y',domain:[0,0.94],title:'Cases per Account (bucket)'},
+  yaxis:{anchor:'x',domain:[0,1],title:'# of Accounts',showgrid:true,gridcolor:'#EEE',range:[0,21494]},
+  yaxis2:{anchor:'x',overlaying:'y',side:'right',title:'# of Cases',showgrid:false,range:[0,120695]},
+  legend:{orientation:'h',y:-0.15,x:0.5,xanchor:'center',yanchor:'top'},
+  margin:{l:40,r:60,t:60,b:80}
+}),{displayModeBar:false,responsive:true});
+
+// ── ch_sig_pct100 ─────────────────────────────────────────────────────────────
+Plotly.newPlot('ch_sig_pct100',[
+  {type:'bar',orientation:'h',name:'Sev-1 Creator %',
+    x:[63.6, 39.4, 9.4, 66.3, 63.2, 75.6, 71.3, 66.8, 72.9, 89.5, 75.7, 56.7, 53.5, 77.4, 60.2, 60.7],y:["GCR", "SMB", "JP", "EMEA CENTRAL", "ANZ", "EMEA FRANCE", "EMEA SOUTH", "EMEA NORTH", "LATAM", "SASIA", "UKI", "AMER ACC CBS", "PS", "AMER PACE", "AMER ACC TMT", "AMER REG"],marker:{color:ORG},
+    text:["63.6%", "39.4%", "9.4%", "66.3%", "63.2%", "75.6%", "71.3%", "66.8%", "72.9%", "89.5%", "75.7%", "56.7%", "53.5%", "77.4%", "60.2%", "60.7%"],textposition:'inside',
+    hovertemplate:'<b>%{y}</b><br>Sev1: %{x}%<extra></extra>'},
+  {type:'bar',orientation:'h',name:'Non Sev-1 %',
+    x:[36.4, 60.6, 90.6, 33.7, 36.8, 24.4, 28.7, 33.2, 27.1, 10.5, 24.3, 43.3, 46.5, 22.6, 39.8, 39.3],y:["GCR", "SMB", "JP", "EMEA CENTRAL", "ANZ", "EMEA FRANCE", "EMEA SOUTH", "EMEA NORTH", "LATAM", "SASIA", "UKI", "AMER ACC CBS", "PS", "AMER PACE", "AMER ACC TMT", "AMER REG"],marker:{color:BLUE},
+    text:["36.4%", "60.6%", "90.6%", "33.7%", "36.8%", "24.4%", "28.7%", "33.2%", "27.1%", "10.5%", "24.3%", "43.3%", "46.5%", "22.6%", "39.8%", "39.3%"],textposition:'inside',
+    hovertemplate:'<b>%{y}</b><br>Non-Sev1: %{x}%<extra></extra>'}
+],Object.assign({},base,{
+  barmode:'stack',height:580,
+  title:{text:'% of Signature Accounts Creating Sev-1 by OU<br><sub>100% = total Signature base</sub>',font:{size:13,color:DARK},x:0.5,xanchor:'center'},
+  xaxis:{title:'% of Accounts',showgrid:true,gridcolor:'#EEE',range:[0,100]},
+  legend:{orientation:'h',y:-0.15,x:0.5,xanchor:'center',yanchor:'top'},
+  margin:{l:150,r:30,t:110,b:70}
+}),{displayModeBar:false,responsive:true});
+
+// ── ch_sig_vol ────────────────────────────────────────────────────────────────
+var sigVolSorted = [[50, "GCR"], [57, "SMB"], [143, "JP"], [375, "EMEA CENTRAL"], [615, "ANZ"], [904, "EMEA FRANCE"], [790, "EMEA SOUTH"], [773, "EMEA NORTH"], [1119, "LATAM"], [2131, "SASIA"], [1401, "UKI"], [1930, "AMER ACC CBS"], [1520, "PS"], [3779, "AMER PACE"], [4332, "AMER ACC TMT"], [5861, "AMER REG"]];
+sigVolSorted.sort(function(a,b){return a[0]-b[0];});
+Plotly.newPlot('ch_sig_vol',[
+  {type:'bar',orientation:'h',cliponaxis:false,
+    x:sigVolSorted.map(function(d){return d[0];}),
+    y:sigVolSorted.map(function(d){return d[1];}),
+    marker:{color:ORG},
+    text:sigVolSorted.map(function(d){return d[0].toLocaleString();}),textposition:'outside',
+    hovertemplate:'<b>%{y}</b><br>Cases: %{x:,}<extra></extra>'}
+],Object.assign({},base,{
+  height:580,
+  title:{text:'Signature Sev-1 Case Volume by OU<br><sub>last 12 months</sub>',font:{size:13,color:DARK},x:0.5,xanchor:'center'},
+  xaxis:{title:'# of Sev-1 Cases',showgrid:true,gridcolor:'#EEE',range:[0,7200]},
+  margin:{l:150,r:80,t:110,b:60}
+}),{displayModeBar:false,responsive:true});
+
+// ── ch_sig_cpa ────────────────────────────────────────────────────────────────
+var scpaSorted = [[7.1, "GCR", "#0176D3"], [2.2, "SMB", "#0176D3"], [3.1, "JP", "#0176D3"], [6.2, "EMEA CENTRAL", "#0176D3"], [5.6, "ANZ", "#0176D3"], [7.7, "EMEA FRANCE", "#FE9339"], [6.6, "EMEA SOUTH", "#0176D3"], [6.1, "EMEA NORTH", "#0176D3"], [8.0, "LATAM", "#FE9339"], [12.5, "SASIA", "#FE9339"], [6.5, "UKI", "#0176D3"], [7.4, "AMER ACC CBS", "#FE9339"], [4.0, "PS", "#0176D3"], [8.5, "AMER PACE", "#FE9339"], [8.3, "AMER ACC TMT", "#FE9339"], [6.9, "AMER REG", "#0176D3"]];
+scpaSorted.sort(function(a,b){return a[0]-b[0];});
+Plotly.newPlot('ch_sig_cpa',[
+  {type:'bar',orientation:'h',cliponaxis:false,
+    x:scpaSorted.map(function(d){return d[0];}),
+    y:scpaSorted.map(function(d){return d[1];}),
+    marker:{color:scpaSorted.map(function(d){return d[2];})},
+    text:scpaSorted.map(function(d){return d[0].toString();}),textposition:'outside',
+    hovertemplate:'<b>%{y}</b><br>%{x} cases/creator<extra></extra>'}
+],Object.assign({},base,{
+  height:580,
+  shapes:[{type:'line',x0:7.2,x1:7.2,y0:0,y1:1,xref:'x',yref:'y domain',line:{color:DARK,dash:'dash'}}],
+  annotations:[{showarrow:false,text:'Sig avg: 7.2',x:7.2,xanchor:'center',xref:'x',y:1,yanchor:'bottom',yref:'y domain'}],
+  title:{text:'Sev1 Cases per Case Creating Accts (Sig) by OU<br><sub>orange = above Sig avg (7.2)</sub>',font:{size:13,color:DARK},x:0.5,xanchor:'center'},
+  xaxis:{title:'Cases / Sev1 Creator',showgrid:true,gridcolor:'#EEE',range:[0,15.6]},
+  margin:{l:150,r:80,t:110,b:40}
+}),{displayModeBar:false,responsive:true});
+
+// ── ch_sig_skew ───────────────────────────────────────────────────────────────
+Plotly.newPlot('ch_sig_skew',[
+  {type:'bar',name:'# Accounts',xaxis:'x',yaxis:'y',
+    x:["1","2-3","4-5","6-10",">10"],y:[950,884,510,578,705],marker:{color:BLUE},
+    text:["950<br>(26.2%)","884<br>(24.4%)","510<br>(14.1%)","578<br>(15.9%)","705<br>(19.4%)"],textposition:'outside',
+    hovertemplate:'Bucket: %{x}<br>Accounts: %{y}<extra></extra>'},
+  {type:'scatter',mode:'lines+markers+text',name:'# Cases',xaxis:'x',yaxis:'y2',
+    x:["1","2-3","4-5","6-10",">10"],y:[950,2109,2267,4477,16126],
+    line:{color:ORG,width:3},marker:{size:10},
+    text:["950","2,109","2,267","4,477","16,126"],
+    textfont:{color:ORG,size:12},
+    textposition:["top center","top center","top center","bottom center","bottom center"]}
+],Object.assign({},base,{
+  height:480,
+  title:{text:'Sev-1 Case Distribution — Signature Sev1 Case Creators',font:{size:13,color:DARK},x:0.5,xanchor:'center'},
+  xaxis:{anchor:'y',domain:[0,0.94],title:'Cases per Account (bucket)'},
+  yaxis:{anchor:'x',domain:[0,1],title:'# of Accounts',showgrid:true,gridcolor:'#EEE',range:[0,1235]},
+  yaxis2:{anchor:'x',overlaying:'y',side:'right',title:'# of Cases',showgrid:false,range:[0,20964]},
+  legend:{orientation:'h',y:-0.15,x:0.5,xanchor:'center',yanchor:'top'},
+  margin:{l:40,r:60,t:60,b:80}
+}),{displayModeBar:false,responsive:true});
+</script>
+</body>
+</html>
