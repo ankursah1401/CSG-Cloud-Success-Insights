@@ -524,14 +524,7 @@ def inject_and_push(js_objects):
             run(['git', '-C', work_dir, 'commit', '-m', f'chore: refresh dashboard {datetime.date.today()}'])
             run(['git', '-C', work_dir, 'push', 'origin', 'gh-pages'])
             print(' done.')
-            pages_host = 'github.io' if GIT_HOST == 'github.com' else f'{GIT_HOST}/pages'
-            owner = GIT_REPO.split('/')[0]
-            repo_name = GIT_REPO.split('/')[1]
-            if GIT_HOST == 'github.com':
-                live_url = f'https://{owner}.github.io/{repo_name}/csi-intake-dashboard.html'
-            else:
-                live_url = f'https://{GIT_HOST}/pages/{GIT_REPO}/csi-intake-dashboard.html'
-            print(f'  ✓ Live → {live_url}')
+            print(f'  ✓ Live → https://git.soma.salesforce.com/pages/ankur-sah/Cloud-Success-Insights/csi-intake-dashboard.html')
         except RuntimeError as e:
             print(f'\n  ✗ {e}')
 
