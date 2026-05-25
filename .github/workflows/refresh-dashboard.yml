@@ -22,7 +22,9 @@ jobs:
         env:
           SLACK_TOKEN:  ${{ secrets.SLACK_TOKEN }}
           SLACK_COOKIE: ${{ secrets.SLACK_COOKIE }}
-          GHE_TOKEN:    ${{ secrets.GHE_TOKEN }}
+          GHE_TOKEN:    ${{ secrets.GH_PAGES_TOKEN }}
+          GIT_HOST:     github.com
+          GIT_REPO:     ankursah1401/CSG-Cloud-Success-Insights
         run: python3 refresh_csi_slack_intake_dashboard.py
 
       - name: Notify on failure

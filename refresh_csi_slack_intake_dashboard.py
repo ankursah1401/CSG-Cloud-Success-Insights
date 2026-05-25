@@ -42,12 +42,16 @@ SLACK_TOKEN  = os.environ.get('SLACK_TOKEN', 'xoxc-YOUR-TOKEN-HERE')
 # Optional CSRF token from the URL query param _x_csid (leave blank to omit)
 SLACK_CSID   = os.environ.get('SLACK_CSID', '')
 
-# GitHub Pages hosting — pushes index.html to gh-pages branch on every refresh.
-# Set GHE_TOKEN to a Personal Access Token with repo scope:
-#   https://git.soma.salesforce.com/settings/tokens
+# GitHub Pages hosting — pushes csi-data.js to gh-pages branch on every refresh.
+# Supports both GHE (git.soma.salesforce.com) and github.com via env vars:
+#   GHE_TOKEN  — PAT with repo scope
+#   GIT_HOST   — override host (default: git.soma.salesforce.com)
+#   GIT_REPO   — override repo slug (default: ankur-sah/Cloud-Success-Insights)
 GHE_TOKEN = os.environ.get('GHE_TOKEN', '')
-GHE_REPO  = 'ankur-sah/Cloud-Success-Insights'
-GHE_API   = 'https://git.soma.salesforce.com/api/v3'
+GIT_HOST  = os.environ.get('GIT_HOST',  'git.soma.salesforce.com')
+GIT_REPO  = os.environ.get('GIT_REPO',  'ankur-sah/Cloud-Success-Insights')
+GHE_REPO  = GIT_REPO   # keep old name for compat
+GHE_API   = f'https://{GIT_HOST}/api/v3' if GIT_HOST != 'github.com' else 'https://api.github.com'
 
 SLACK_ROUTE  = 'E7T5PNK3P:E7T5PNK3P'
 LIST_FILE_ID = 'F09424HQ5JL'
@@ -483,7 +487,7 @@ def inject_and_push(js_objects):
         print('  ✗ GHE_TOKEN not set — skipping GitHub Pages push.')
         return
 
-    repo_url = f'https://{GHE_TOKEN}@git.soma.salesforce.com/{GHE_REPO}.git'
+    repo_url = f'https://{GHE_TOKEN}@{GIT_HOST}/{GIT_REPO}.git'
     work_dir = '/tmp/csi-gh-pages'
     data_file = os.path.join(work_dir, 'csi-data.js')
 
@@ -520,7 +524,14 @@ def inject_and_push(js_objects):
             run(['git', '-C', work_dir, 'commit', '-m', f'chore: refresh dashboard {datetime.date.today()}'])
             run(['git', '-C', work_dir, 'push', 'origin', 'gh-pages'])
             print(' done.')
-            print(f'  ✓ Live → https://git.soma.salesforce.com/pages/ankur-sah/Cloud-Success-Insights/csi-intake-dashboard.html')
+            pages_host = 'github.io' if GIT_HOST == 'github.com' else f'{GIT_HOST}/pages'
+            owner = GIT_REPO.split('/')[0]
+            repo_name = GIT_REPO.split('/')[1]
+            if GIT_HOST == 'github.com':
+                live_url = f'https://{owner}.github.io/{repo_name}/csi-intake-dashboard.html'
+            else:
+                live_url = f'https://{GIT_HOST}/pages/{GIT_REPO}/csi-intake-dashboard.html'
+            print(f'  ✓ Live → {live_url}')
         except RuntimeError as e:
             print(f'\n  ✗ {e}')
 
