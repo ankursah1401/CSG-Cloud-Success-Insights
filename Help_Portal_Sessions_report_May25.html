@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>help.salesforce.com — Session Trend Analysis</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+<style>
+  :root {
+    --sf-blue:#0176d3; --sf-dark:#032d60; --sf-light:#e8f4fd;
+    --red:#c23934; --green:#2e844a; --amber:#dd7a01; --gray:#706e6b;
+    --bg:#f3f3f3; --card:#ffffff; --border:#dddbda;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Salesforce Sans',-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg);color:#181818;font-size:14px;}
+  header{background:var(--sf-dark);color:#fff;padding:20px 32px;display:flex;align-items:center;gap:16px;}
+  header h1{font-size:20px;font-weight:700;}
+  header span{font-size:13px;opacity:.7;margin-left:auto;}
+  .container{max-width:1200px;margin:0 auto;padding:24px 32px;}
+  .section-title{font-size:16px;font-weight:700;color:var(--sf-dark);margin-bottom:14px;border-left:4px solid var(--sf-blue);padding-left:10px;}
+  .kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px;}
+  .kpi{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:18px 20px;}
+  .kpi .label{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--gray);margin-bottom:6px;}
+  .kpi .value{font-size:26px;font-weight:700;color:var(--sf-dark);line-height:1;}
+  .kpi .sub{font-size:12px;margin-top:6px;}
+  .kpi .sub.down{color:var(--red);} .kpi .sub.up{color:var(--green);} .kpi .sub.neutral{color:var(--gray);}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:20px 24px;margin-bottom:24px;}
+  .chart-wrap{position:relative;height:360px;}
+  .insight-list{list-style:none;display:flex;flex-direction:column;gap:10px;}
+  .insight-list li{padding:12px 14px;border-radius:6px;font-size:13px;line-height:1.5;border-left:4px solid;}
+  .insight-list li.red{background:#fef1f1;border-color:var(--red);}
+  .insight-list li.amber{background:#fef6ec;border-color:var(--amber);}
+  .insight-list li.blue{background:var(--sf-light);border-color:var(--sf-blue);}
+  .insight-list li.green{background:#f3fbf5;border-color:var(--green);}
+  .insight-list li strong{display:block;margin-bottom:2px;}
+  table{width:100%;border-collapse:collapse;font-size:13px;}
+  thead th{background:var(--sf-dark);color:#fff;padding:8px 12px;text-align:left;font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.04em;}
+  tbody tr:nth-child(even){background:#f9f9f9;}
+  tbody td{padding:8px 12px;border-bottom:1px solid var(--border);}
+  .pill{display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600;}
+  .pill.down{background:#fde8e8;color:var(--red);}
+  .pill.up{background:#e3f5e9;color:var(--green);}
+  .pill.ga4{background:var(--sf-light);color:var(--sf-blue);}
+  .bar-cell{display:flex;align-items:center;gap:8px;}
+  .bar-bg{flex:1;height:8px;background:#eee;border-radius:4px;max-width:120px;}
+  .bar-fill{height:8px;border-radius:4px;}
+  .bar-fill.neg{background:var(--red);}
+  .bar-fill.pos{background:var(--green);}
+  .bar-fill.blue{background:var(--sf-blue);}
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+  .three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;}
+  .note{font-size:11px;color:var(--gray);margin-top:10px;padding-top:8px;border-top:1px solid var(--border);}
+  .tag-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;}
+  .tag{padding:4px 10px;border-radius:16px;font-size:12px;font-weight:600;}
+  .tag.red{background:#fde8e8;color:var(--red);}
+  .tag.green{background:#e3f5e9;color:var(--green);}
+  .tag.blue{background:var(--sf-light);color:var(--sf-blue);}
+  .divider{height:1px;background:var(--border);margin:28px 0;}
+  @media(max-width:768px){.kpi-row{grid-template-columns:1fr 1fr;}.two-col,.three-col{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div style="font-size:11px;opacity:.6;margin-bottom:4px;">HELP.SALESFORCE.COM</div>
+    <h1>Session Trend Analysis</h1>
+  </div>
+  <span>GA4 data (CI_BQ_GA4_HELP_VW) &nbsp;·&nbsp; Mar 2024 – Apr 2026 &nbsp;·&nbsp; Generated May 2026</span>
+</header>
+
+<div class="container">
+
+  <!-- KPIs -->
+  <div class="kpi-row" style="margin-top:8px;">
+    <div class="kpi">
+      <div class="label">2026 YTD Avg / Month</div>
+      <div class="value">4.1M</div>
+      <div class="sub down">&#9660; 11.3% vs same period 2025</div>
+    </div>
+    <div class="kpi">
+      <div class="label">Organic Search Loss (YoY)</div>
+      <div class="value">&#8209;8.0M</div>
+      <div class="sub down">&#9660; 24.2% — #1 decline driver</div>
+    </div>
+    <div class="kpi">
+      <div class="label">GA4-Era Peak</div>
+      <div class="value">5.18M</div>
+      <div class="sub neutral">May 2024</div>
+    </div>
+    <div class="kpi">
+      <div class="label">Peak-to-Trough (GA4 era)</div>
+      <div class="value">&#8209;30%</div>
+      <div class="sub down">May 2024 → Dec 2025</div>
+    </div>
+  </div>
+
+  <!-- Key Insights -->
+  <div class="section-title">Key Insights</div>
+  <div class="card" style="margin-bottom:24px;">
+    <ul class="insight-list">
+      <li class="red">
+        <strong>Google Organic is the dominant driver — lost 8M sessions YoY (&minus;25.9%)</strong>
+        Google organic dropped from 31M to 23M sessions (Mar 2024–Feb 2025 vs Mar 2025–Feb 2026). This single channel accounts for the overwhelming majority of overall decline. Yahoo organic (&minus;46%), Reddit (&minus;52%), and other organic sources compound the signal.
+      </li>
+      <li class="red">
+        <strong>Knowledge Articles are the core content losing traffic (&minus;21.8%, &minus;3.5M sessions)</strong>
+        The /articleView URL lost 4.4M sessions (&minus;9.1%) and KBKnowledgeArticle content type dropped 21.8%. Users are finding article-level answers without ever landing on help.salesforce.com — consistent with AI answer extraction from Google.
+      </li>
+      <li class="red">
+        <strong>APAC and emerging markets hit disproportionately hard</strong>
+        China &minus;44%, South Korea &minus;32%, Vietnam &minus;31%, Taiwan &minus;36%, Philippines &minus;27%. These markets show 2–4× more erosion than the US (&minus;9%), suggesting stronger AI/LLM adoption or different search engine algorithm changes in those regions.
+      </li>
+      <li class="amber">
+        <strong>Tableau and MuleSoft referral traffic collapsed (&minus;64% and &minus;73%)</strong>
+        kb.tableau.com dropped from 602K to 215K sessions. help.mulesoft.com from 277K to 75K. These cross-property referral flows have largely broken — possibly due to those properties shifting their own help ecosystems.
+      </li>
+      <li class="amber">
+        <strong>Case submission traffic declining (&minus;21%), search traffic &minus;29%</strong>
+        /search-result sessions fell 273K and /case-submission fell 266K. The case submission drop is largely attributable to users now creating cases through Agentforce, bypassing the traditional help.salesforce.com case submission flow entirely.
+      </li>
+      <li class="green">
+        <strong>ChatGPT referral grew +344% — AI is sending some users back</strong>
+        chatgpt.com referral sessions grew from 78K to 345K (+267K). This is a small but fast-growing channel, suggesting that while AI tools are cannibalizing organic search traffic, they also occasionally surface help.salesforce.com links directly.
+      </li>
+      <li class="green">
+        <strong>Direct traffic up +29% and case management pages growing</strong>
+        Direct sessions grew by 5.4M, /s/cases +35%, /s/case-view +21%, /s/login +11%. Logged-in and support-workflow usage is healthy and growing — the decline is entirely in discovery/self-service via search.
+      </li>
+      <li class="blue">
+        <strong>Einstein / AI product pages surging: +148% on /products/einstein</strong>
+        /s/products/einstein up 147%, Data Cloud +37%, Platform +47%, Proactive Monitoring +44%. Newer AI-era products are driving incremental traffic even as legacy content declines.
+      </li>
+    </ul>
+  </div>
+
+  <!-- Main chart -->
+  <div class="section-title">Monthly Session Count — Mar 2024 to Apr 2026</div>
+  <div class="card">
+    <div class="chart-wrap"><canvas id="mainChart"></canvas></div>
+    <div class="note">
+      Source: CI_BQ_GA4_HELP_VW &nbsp;·&nbsp; traffichosttype = Production &nbsp;·&nbsp; YoY shown from Mar 2025 onward
+    </div>
+  </div>
+
+  <!-- Channel breakdown -->
+  <div class="section-title">Traffic by Marketing Channel (Mar 2024–Feb 2025 vs Mar 2025–Feb 2026)</div>
+  <div class="card">
+    <div class="two-col" style="gap:32px;align-items:start;">
+      <div>
+        <div style="font-size:12px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;">Session Volume by Channel</div>
+        <div class="chart-wrap" style="height:260px;"><canvas id="channelChart"></canvas></div>
+      </div>
+      <div>
+        <table>
+          <thead><tr><th>Channel</th><th>Y1 Sessions</th><th>Y2 Sessions</th><th>Change</th></tr></thead>
+          <tbody>
+            <tr><td>Organic Search</td><td>33.0M</td><td>25.0M</td><td><span class="pill down">&#8209;24.2%</span></td></tr>
+            <tr><td>Direct</td><td>18.5M</td><td>23.9M</td><td><span class="pill up">+29.1%</span></td></tr>
+            <tr><td>Referral</td><td>4.7M</td><td>5.3M</td><td><span class="pill up">+12.0%</span></td></tr>
+            <tr><td>SFDC Email</td><td>420K</td><td>646K</td><td><span class="pill up">+53.5%</span></td></tr>
+            <tr><td>Organic Social</td><td>168K</td><td>109K</td><td><span class="pill down">&#8209;35.5%</span></td></tr>
+            <tr><td>SFDC Referral</td><td>116K</td><td>108K</td><td><span class="pill down">&#8209;6.9%</span></td></tr>
+          </tbody>
+        </table>
+        <div class="note" style="margin-top:12px;">Y1 = Mar 2024–Feb 2025 &nbsp;·&nbsp; Y2 = Mar 2025–Feb 2026</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Traffic sources: winners & losers -->
+  <div class="section-title">Traffic Source (Medium) — Top Winners &amp; Losers</div>
+  <div class="two-col">
+    <div class="card" style="margin-bottom:0;">
+      <div style="font-size:13px;font-weight:700;color:var(--red);margin-bottom:12px;">Top Declining Sources</div>
+      <table>
+        <thead><tr><th>Source / Medium</th><th>Y1</th><th>Y2</th><th>Change</th></tr></thead>
+        <tbody>
+          <tr><td>google / organic</td><td>31.0M</td><td>23.0M</td><td><span class="pill down">&#8209;25.9%</span></td></tr>
+          <tr><td>help.mulesoft.com / referral</td><td>277K</td><td>75K</td><td><span class="pill down">&#8209;73.1%</span></td></tr>
+          <tr><td>kb.tableau.com / referral</td><td>602K</td><td>215K</td><td><span class="pill down">&#8209;64.3%</span></td></tr>
+          <tr><td>mc.exacttarget.com / referral</td><td>252K</td><td>118K</td><td><span class="pill down">&#8209;53.2%</span></td></tr>
+          <tr><td>reddit.com / referral</td><td>88K</td><td>42K</td><td><span class="pill down">&#8209;51.7%</span></td></tr>
+          <tr><td>yahoo / organic</td><td>138K</td><td>74K</td><td><span class="pill down">&#8209;46.4%</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="card" style="margin-bottom:0;">
+      <div style="font-size:13px;font-weight:700;color:var(--green);margin-bottom:12px;">Top Growing Sources</div>
+      <table>
+        <thead><tr><th>Source / Medium</th><th>Y1</th><th>Y2</th><th>Change</th></tr></thead>
+        <tbody>
+          <tr><td>(direct) / (none)</td><td>18.5M</td><td>23.9M</td><td><span class="pill up">+29.1%</span></td></tr>
+          <tr><td>chatgpt.com / referral</td><td>78K</td><td>345K</td><td><span class="pill up">+344.5%</span></td></tr>
+          <tr><td>orgcs.my.site.com / referral</td><td>64K</td><td>245K</td><td><span class="pill up">+283.3%</span></td></tr>
+          <tr><td>teams.cdn.office.net / referral</td><td>481K</td><td>756K</td><td><span class="pill up">+57.2%</span></td></tr>
+          <tr><td>techcomms / email</td><td>395K</td><td>615K</td><td><span class="pill up">+55.6%</span></td></tr>
+          <tr><td>bing / organic</td><td>1.73M</td><td>1.80M</td><td><span class="pill up">+4.2%</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div style="margin-bottom:24px;"></div>
+
+  <!-- Pages -->
+  <div class="section-title">Top Declining Pages (by Absolute Session Loss)</div>
+  <div class="card">
+    <table>
+      <thead><tr><th>Page URL</th><th>Y1 Sessions</th><th>Y2 Sessions</th><th>Abs Change</th><th>% Change</th><th>Loss Bar</th></tr></thead>
+      <tbody id="pagesTbody"></tbody>
+    </table>
+    <div class="note">Only pages with &gt;10K sessions in Y1. Query uses regex-stripped URLs (no query params).</div>
+  </div>
+
+  <!-- Growing pages -->
+  <div class="section-title">Top Growing Pages</div>
+  <div class="card">
+    <table>
+      <thead><tr><th>Page URL</th><th>Y1 Sessions</th><th>Y2 Sessions</th><th>Abs Change</th><th>% Change</th></tr></thead>
+      <tbody id="growingPagesTbody"></tbody>
+    </table>
+  </div>
+
+  <!-- Content type + Category -->
+  <div class="two-col">
+    <div>
+      <div class="section-title">By Page Content Type</div>
+      <div class="card" style="margin-bottom:0;">
+        <table>
+          <thead><tr><th>Content Type</th><th>Y1</th><th>Y2</th><th>Change</th></tr></thead>
+          <tbody>
+            <tr><td>KBKnowledgeArticle</td><td>16.1M</td><td>12.6M</td><td><span class="pill down">&#8209;21.8%</span></td></tr>
+            <tr><td>HelpDocs</td><td>36.5M</td><td>33.1M</td><td><span class="pill down">&#8209;9.5%</span></td></tr>
+            <tr><td>KBQuickStarts</td><td>73K</td><td>115K</td><td><span class="pill up">+57.0%</span></td></tr>
+            <tr><td>External</td><td>68K</td><td>168K</td><td><span class="pill up">+148.5%</span></td></tr>
+          </tbody>
+        </table>
+        <div class="note">Knowledge Articles hit hardest — consistent with Google AI-summary suppression of article traffic.</div>
+      </div>
+    </div>
+    <div>
+      <div class="section-title">By Content Category (Top Decliners)</div>
+      <div class="card" style="margin-bottom:0;">
+        <table>
+          <thead><tr><th>Category</th><th>Y1</th><th>Y2</th><th>Change</th></tr></thead>
+          <tbody>
+            <tr><td>Documentation</td><td>327K</td><td>30K</td><td><span class="pill down">&#8209;90.7%</span></td></tr>
+            <tr><td>Community Posts</td><td>107K</td><td>0</td><td><span class="pill down">&#8209;100%</span></td></tr>
+            <tr><td>Knowledge Articles</td><td>100K</td><td>~0</td><td><span class="pill down">&#8209;100%</span></td></tr>
+            <tr><td>Trailhead</td><td>99K</td><td>3K</td><td><span class="pill down">&#8209;97.1%</span></td></tr>
+            <tr><td>Help Banner</td><td>1.35M</td><td>204K</td><td><span class="pill down">&#8209;84.9%</span></td></tr>
+            <tr><td>Developer Docs</td><td>242K</td><td>156K</td><td><span class="pill down">&#8209;35.3%</span></td></tr>
+            <tr><td>Release Notes</td><td>186K</td><td>126K</td><td><span class="pill down">&#8209;32.0%</span></td></tr>
+            <tr><td>Known Issues</td><td>74K</td><td>38K</td><td><span class="pill down">&#8209;48.0%</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div style="margin-bottom:24px;"></div>
+
+  <!-- Geo -->
+  <div class="section-title">Session Decline by Country</div>
+  <div class="card">
+    <div class="two-col" style="gap:32px;align-items:start;">
+      <div>
+        <div class="chart-wrap" style="height:360px;"><canvas id="geoChart"></canvas></div>
+      </div>
+      <div>
+        <table>
+          <thead><tr><th>Country</th><th>Y1</th><th>Y2</th><th>Change</th></tr></thead>
+          <tbody>
+            <tr><td>United States</td><td>24.4M</td><td>22.2M</td><td><span class="pill down">&#8209;9.0%</span></td></tr>
+            <tr><td>India</td><td>11.0M</td><td>9.0M</td><td><span class="pill down">&#8209;18.0%</span></td></tr>
+            <tr><td>Japan</td><td>6.1M</td><td>5.0M</td><td><span class="pill down">&#8209;18.3%</span></td></tr>
+            <tr><td>Canada</td><td>2.0M</td><td>1.6M</td><td><span class="pill down">&#8209;20.9%</span></td></tr>
+            <tr><td>Australia</td><td>1.7M</td><td>1.4M</td><td><span class="pill down">&#8209;14.7%</span></td></tr>
+            <tr><td>Brazil</td><td>1.4M</td><td>1.15M</td><td><span class="pill down">&#8209;17.8%</span></td></tr>
+            <tr><td>Philippines</td><td>543K</td><td>396K</td><td><span class="pill down">&#8209;27.1%</span></td></tr>
+            <tr><td>South Korea</td><td>426K</td><td>291K</td><td><span class="pill down">&#8209;31.6%</span></td></tr>
+            <tr><td>China</td><td>252K</td><td>141K</td><td><span class="pill down">&#8209;44.0%</span></td></tr>
+            <tr><td>Vietnam</td><td>230K</td><td>159K</td><td><span class="pill down">&#8209;30.9%</span></td></tr>
+          </tbody>
+        </table>
+        <div class="note" style="margin-top:8px;">APAC markets (China, Korea, Vietnam, Taiwan) declining 2–5× faster than the US, possibly reflecting faster AI tool adoption or regional search algorithm changes.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Device -->
+  <div class="section-title">By Device Category</div>
+  <div class="card">
+    <div style="display:flex;gap:24px;flex-wrap:wrap;">
+      <div style="flex:1;min-width:200px;">
+        <div class="chart-wrap" style="height:200px;"><canvas id="deviceChart"></canvas></div>
+      </div>
+      <div style="flex:2;min-width:280px;">
+        <table>
+          <thead><tr><th>Device</th><th>Y1</th><th>Y2</th><th>Change</th></tr></thead>
+          <tbody>
+            <tr><td>Desktop</td><td>50.5M</td><td>48.9M</td><td><span class="pill down">&#8209;3.2%</span></td></tr>
+            <tr><td>Mobile</td><td>3.53M</td><td>3.28M</td><td><span class="pill down">&#8209;7.2%</span></td></tr>
+            <tr><td>Tablet</td><td>116K</td><td>141K</td><td><span class="pill up">+21.2%</span></td></tr>
+          </tbody>
+        </table>
+        <div class="note" style="margin-top:8px;">Desktop dominates (93%+ share) and is the primary affected device. Mobile declining faster in relative terms.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Monthly table -->
+  <div class="section-title">Full Monthly Breakdown</div>
+  <div class="card">
+    <table>
+      <thead>
+        <tr>
+          <th>Month</th><th>Sessions</th><th>Volume</th><th>MoM</th><th>YoY</th>
+        </tr>
+      </thead>
+      <tbody id="monthTbody"></tbody>
+    </table>
+  </div>
+
+</div><!-- /container -->
+
+<script>
+const RAW = [
+  {m:"2024-03",n:4204895},{m:"2024-04",n:4709036},
+  {m:"2024-05",n:5184297},{m:"2024-06",n:4515986},
+  {m:"2024-07",n:4968313},{m:"2024-08",n:4332322},
+  {m:"2024-09",n:4563866},{m:"2024-10",n:4728371},
+  {m:"2024-11",n:4183103},{m:"2024-12",n:3657932},
+  {m:"2025-01",n:4492386},{m:"2025-02",n:4623298},
+  {m:"2025-03",n:4704919},{m:"2025-04",n:4803058},
+  {m:"2025-05",n:4614730},{m:"2025-06",n:4579255},
+  {m:"2025-07",n:5063544},{m:"2025-08",n:4118222},
+  {m:"2025-09",n:4549354},{m:"2025-10",n:4461278},
+  {m:"2025-11",n:3805875},{m:"2025-12",n:3616246},
+  {m:"2026-01",n:4115822},{m:"2026-02",n:3899330},
+  {m:"2026-03",n:4323147},{m:"2026-04",n:4179650},
+];
+
+const byMonth={};
+RAW.forEach(d=>{byMonth[d.m]=d.n;});
+function yoy(m,n){const[yr,mo]=m.split("-");const p=byMonth[`${+yr-1}-${mo}`];return p?(n-p)/p*100:null;}
+const fmt=n=>(n/1e6).toFixed(1)+"M";
+const fmtPct=v=>v==null?"—":(v>=0?"+":"")+v.toFixed(1)+"%";
+const MAX=Math.max(...RAW.map(d=>d.n));
+
+// ── Monthly table ────────────────────────────────────────────────
+const tbody=document.getElementById("monthTbody");
+RAW.forEach((d,i)=>{
+  const prev=i>0?RAW[i-1].n:null;
+  const mom=prev?(d.n-prev)/prev*100:null;
+  const yoyVal=yoy(d.m,d.n);
+  const barW=Math.round(d.n/MAX*100);
+  const momC=mom==null?"":mom>=0?"up":"down";
+  const yoyC=yoyVal==null?"":yoyVal>=0?"up":"down";
+  const tr=document.createElement("tr");
+  tr.innerHTML=`
+    <td><strong>${d.m}</strong></td>
+    <td>${fmt(d.n)}</td>
+    <td><div class="bar-cell"><div class="bar-bg"><div class="bar-fill blue" style="width:${barW}%"></div></div></div></td>
+    <td>${mom!=null?`<span class="pill ${momC}">${fmtPct(mom)}</span>`:"—"}</td>
+    <td>${yoyVal!=null?`<span class="pill ${yoyC}">${fmtPct(yoyVal)}</span>`:"—"}</td>`;
+  tbody.appendChild(tr);
+});
+
+// ── Pages declining ──────────────────────────────────────────────
+const decliningPages=[
+  {url:"/s/articleView",y1:48669139,y2:44242531},
+  {url:"/s/search-result",y1:943697,y2:670028},
+  {url:"/s/case-submission",y1:1264308,y2:997976},
+  {url:"/s/products/sales",y1:97216,y2:67641},
+  {url:"/s/products/marketing",y1:69404,y2:51062},
+  {url:"/s/products/service",y1:58931,y2:43081},
+  {url:"/s/settings",y1:77892,y2:77193},
+];
+const maxLoss=Math.max(...decliningPages.map(p=>p.y1-p.y2));
+const ptb=document.getElementById("pagesTbody");
+decliningPages.forEach(p=>{
+  const abs=p.y2-p.y1;const pct=(abs/p.y1*100);
+  const bw=Math.round(Math.abs(abs)/maxLoss*100);
+  const tr=document.createElement("tr");
+  tr.innerHTML=`
+    <td style="font-size:12px;font-family:monospace;">help.salesforce.com${p.url}</td>
+    <td>${fmt(p.y1)}</td><td>${fmt(p.y2)}</td>
+    <td style="color:var(--red);font-weight:600;">${(abs/1e6).toFixed(1)}M</td>
+    <td><span class="pill down">${pct.toFixed(1)}%</span></td>
+    <td><div class="bar-cell"><div class="bar-bg" style="max-width:100px;"><div class="bar-fill neg" style="width:${bw}%"></div></div></div></td>`;
+  ptb.appendChild(tr);
+});
+
+// ── Pages growing ────────────────────────────────────────────────
+const growingPages=[
+  {url:"/s/",y1:2240699,y2:4720430},
+  {url:"/s/case-view",y1:4531245,y2:5485569},
+  {url:"/s/cases",y1:2593535,y2:3488331},
+  {url:"/s/products/einstein",y1:15697,y2:38868},
+  {url:"/s/accelerators",y1:32114,y2:97797},
+  {url:"/s/manage-all-orgs",y1:197699,y2:382672},
+  {url:"/s/products/platform",y1:23609,y2:34689},
+  {url:"/s/products/datacloud",y1:24170,y2:33171},
+];
+const gtb=document.getElementById("growingPagesTbody");
+growingPages.forEach(p=>{
+  const abs=p.y2-p.y1;const pct=(abs/p.y1*100);
+  const tr=document.createElement("tr");
+  tr.innerHTML=`
+    <td style="font-size:12px;font-family:monospace;">help.salesforce.com${p.url}</td>
+    <td>${fmt(p.y1)}</td><td>${fmt(p.y2)}</td>
+    <td style="color:var(--green);font-weight:600;">+${(abs/1e6).toFixed(1)}M</td>
+    <td><span class="pill up">+${pct.toFixed(1)}%</span></td>`;
+  gtb.appendChild(tr);
+});
+
+// ── Main chart ───────────────────────────────────────────────────
+Chart.register(ChartDataLabels);
+const labels=RAW.map(d=>d.m);
+const sessionData=RAW.map(d=>d.n);
+new Chart(document.getElementById("mainChart").getContext("2d"),{
+  type:"line",
+  data:{labels,datasets:[
+    {label:"Sessions (GA4)",data:sessionData,borderColor:"#0176d3",backgroundColor:"rgba(1,118,211,0.08)",borderWidth:2,pointRadius:4,pointHoverRadius:6,tension:0.3,fill:true},
+  ]},
+  options:{responsive:true,maintainAspectRatio:false,
+    interaction:{mode:"index",intersect:false},
+    plugins:{
+      legend:{display:false},
+      tooltip:{callbacks:{label:c=>` Sessions: ${c.parsed.y.toLocaleString()}`}},
+      datalabels:{
+        align:"top",
+        anchor:"end",
+        offset:2,
+        font:{size:10,weight:"600"},
+        color:"#032d60",
+        formatter:v=>(v/1e6).toFixed(2)+"M",
+      },
+    },
+    scales:{
+      x:{ticks:{maxRotation:45,font:{size:11}},grid:{color:"#eee"}},
+      y:{ticks:{font:{size:11},callback:v=>(v/1e6).toFixed(2)+"M"},grid:{color:"#eee"},
+         title:{display:true,text:"Sessions (M)",font:{size:12}},
+         min:3000000}
+    }
+  }
+});
+
+// ── Channel donut ────────────────────────────────────────────────
+const channelVals=[32996996,18514807,4709114,420459,168247,116375];
+const channelTotal=channelVals.reduce((a,b)=>a+b,0);
+new Chart(document.getElementById("channelChart").getContext("2d"),{
+  type:"doughnut",
+  data:{
+    labels:["Organic Search","Direct","Referral","SFDC Email","Organic Social","SFDC Referral"],
+    datasets:[
+      {label:"Y1 (Mar24–Feb25)",data:channelVals,
+       backgroundColor:["#c23934","#0176d3","#2e844a","#dd7a01","#5c3d99","#706e6b"],borderWidth:2},
+    ]
+  },
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{
+      legend:{position:"right",labels:{font:{size:11},boxWidth:12}},
+      tooltip:{callbacks:{label:c=>`${c.label}: ${(c.parsed/1e6).toFixed(1)}M`}},
+      datalabels:{
+        color:"#fff",
+        font:{size:11,weight:"700"},
+        formatter:(v,ctx)=>{
+          const pct=(v/channelTotal*100);
+          return pct>=3?pct.toFixed(1)+"%":"";
+        },
+      },
+    }
+  }
+});
+
+// ── Geo bar chart ────────────────────────────────────────────────
+const geoData={
+  labels:["US","India","Japan","Canada","Australia","Brazil","Philippines","S.Korea","China","Vietnam"],
+  y1:[24437096,10982999,6113753,1991894,1689731,1399019,543011,425760,251911,230010],
+  y2:[22239351,9008329,4994844,1576183,1440681,1150687,395796,291086,141053,158993],
+};
+new Chart(document.getElementById("geoChart").getContext("2d"),{
+  type:"bar",
+  data:{labels:geoData.labels,datasets:[
+    {label:"Y1 (Mar24–Feb25)",data:geoData.y1,backgroundColor:"rgba(1,118,211,0.5)",borderColor:"#0176d3",borderWidth:1},
+    {label:"Y2 (Mar25–Feb26)",data:geoData.y2,backgroundColor:"rgba(194,57,52,0.5)",borderColor:"#c23934",borderWidth:1},
+  ]},
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{
+      legend:{position:"top",labels:{font:{size:11}}},
+      tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${(c.parsed.y/1e6).toFixed(1)}M`}},
+      datalabels:{
+        anchor:"end",align:"top",offset:1,
+        font:{size:9,weight:"600"},color:"#032d60",
+        formatter:v=>(v/1e6).toFixed(1)+"M",
+      },
+    },
+    scales:{
+      x:{ticks:{font:{size:11}}},
+      y:{ticks:{font:{size:11},callback:v=>(v/1e6).toFixed(1)+"M"},grid:{color:"#eee"}},
+    },
+  }
+});
+
+// ── Device donut ─────────────────────────────────────────────────
+const deviceVals=[48916257,3276289,140848];
+const deviceTotal=deviceVals.reduce((a,b)=>a+b,0);
+new Chart(document.getElementById("deviceChart").getContext("2d"),{
+  type:"doughnut",
+  data:{
+    labels:["Desktop","Mobile","Tablet"],
+    datasets:[{data:deviceVals,
+      backgroundColor:["#0176d3","#dd7a01","#2e844a"],borderWidth:2}]
+  },
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{
+      legend:{position:"bottom",labels:{font:{size:11},boxWidth:12}},
+      tooltip:{callbacks:{label:c=>`${c.label}: ${(c.parsed/1e6).toFixed(1)}M`}},
+      datalabels:{
+        color:"#fff",
+        font:{size:11,weight:"700"},
+        formatter:(v,ctx)=>{
+          const pct=(v/deviceTotal*100);
+          return pct>=3?pct.toFixed(1)+"%":"";
+        },
+      },
+    }
+  }
+});
+</script>
+</body>
+</html>
