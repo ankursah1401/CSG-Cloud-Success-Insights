@@ -10,34 +10,20 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-
-      - name: Download refresh script from GHE
-        env:
-          GHE_TOKEN: ${{ secrets.GHE_TOKEN }}
-        run: |
-          python3 - <<'PYEOF'
-          import base64, json, urllib.request, os
-          GHE_TOKEN = os.environ['GHE_TOKEN']
-          url = 'https://git.soma.salesforce.com/api/v3/repos/ankur-sah/Cloud-Success-Insights/contents/SlackList_Dashboard_Setup/refresh_csi_slack_intake_dashboard.py?ref=master'
-          req = urllib.request.Request(url, headers={'Authorization': f'token {GHE_TOKEN}', 'User-Agent': 'x'})
-          with urllib.request.urlopen(req, timeout=30) as resp:
-              data = json.loads(resp.read())
-          code = base64.b64decode(data['content']).decode('utf-8')
-          with open('refresh_csi.py', 'w') as f:
-              f.write(code)
-          print(f'Downloaded {len(code)//1024} KB')
-          PYEOF
 
       - name: Run dashboard refresh
         env:
           SLACK_TOKEN:  ${{ secrets.SLACK_TOKEN }}
           SLACK_COOKIE: ${{ secrets.SLACK_COOKIE }}
           GHE_TOKEN:    ${{ secrets.GHE_TOKEN }}
-        run: python3 refresh_csi.py
+        run: python3 refresh_csi_slack_intake_dashboard.py
 
       - name: Notify on failure
         if: failure()
