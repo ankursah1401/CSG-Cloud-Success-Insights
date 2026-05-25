@@ -19,17 +19,66 @@ jobs:
           python-version: '3.11'
 
       - name: Run dashboard refresh
+        id: refresh
         env:
           SLACK_TOKEN:  ${{ secrets.SLACK_TOKEN }}
           SLACK_COOKIE: ${{ secrets.SLACK_COOKIE }}
           GHE_TOKEN:    ${{ secrets.GH_PAGES_TOKEN }}
           GIT_HOST:     github.com
           GIT_REPO:     ankursah1401/CSG-Cloud-Success-Insights
-        run: python3 refresh_csi_slack_intake_dashboard.py
-
-      - name: Notify on failure
-        if: failure()
         run: |
-          echo "::error::Dashboard refresh failed. Slack credentials may be expired."
-          echo "To fix: re-extract SLACK_TOKEN and SLACK_COOKIE from DevTools and update at:"
-          echo "https://github.com/ankursah1401/CSG-Cloud-Success-Insights/settings/secrets/actions"
+          python3 refresh_csi_slack_intake_dashboard.py 2>&1 | tee /tmp/refresh_output.txt
+          echo "exit_code=${PIPESTATUS[0]}" >> $GITHUB_OUTPUT
+
+      - name: Send success email
+        if: success()
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          secure: true
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+          subject: "✅ CSI Dashboard refreshed — ${{ github.run_number }}"
+          to: ankur.sah@salesforce.com
+          from: CSI Dashboard <${{ secrets.MAIL_USERNAME }}>
+          body: |
+            ✅ CSI Intake Dashboard refreshed successfully.
+
+            Ran at: ${{ github.run_id }}
+            Triggered by: ${{ github.event_name }}
+
+            Live dashboard:
+            https://git.soma.salesforce.com/pages/ankur-sah/Cloud-Success-Insights/csi-intake-dashboard.html
+
+            View run:
+            https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+      - name: Send failure email
+        if: failure()
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          secure: true
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+          subject: "❌ CSI Dashboard refresh FAILED — ${{ github.run_number }}"
+          to: ankur.sah@salesforce.com
+          from: CSI Dashboard <${{ secrets.MAIL_USERNAME }}>
+          body: |
+            ❌ CSI Intake Dashboard refresh FAILED.
+
+            Ran at: ${{ github.run_id }}
+            Triggered by: ${{ github.event_name }}
+
+            Most likely cause: Slack credentials (SLACK_TOKEN / SLACK_COOKIE) have expired.
+
+            To fix:
+            1. Open https://salesforce.enterprise.slack.com/lists/T01G0063H29/F09424HQ5JL
+            2. DevTools → Network → filter "lists.records" → scroll list → Copy as cURL
+            3. Update secrets at:
+               https://github.com/${{ github.repository }}/settings/secrets/actions
+
+            View failed run:
+            https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
